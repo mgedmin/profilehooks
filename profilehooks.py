@@ -79,7 +79,8 @@ def profile(fn):
     fp = HotShotFuncProfile(fn)
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
-    new_fn = lambda *args, **kw: fp(*args, **kw)
+    def new_fn(*args, **kw):
+        return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
     return new_fn
 
@@ -106,7 +107,26 @@ def coverage(fn):
     fp = TraceFuncCoverage(fn) # or HotShotFuncCoverage
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
-    new_fn = lambda *args, **kw: fp(*args, **kw)
+    def new_fn(*args, **kw):
+        return fp(*args, **kw)
+    new_fn.__doc__ = fn.__doc__
+    return new_fn
+
+
+def coverage_with_hotshot(fn):
+    """Mark `fn` for line coverage analysis.
+
+    Uses the 'hotshot' module for fast coverage analysis.
+
+    BUG: Produces inaccurate results.
+
+    See the docstring of `coverage` for usage examples.
+    """
+    fp = HotShotFuncCoverage(fn)
+    # We cannot return fp or fp.__call__ directly as that would break method
+    # definitions, instead we need to return a plain function.
+    def new_fn(*args, **kw):
+        return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
     return new_fn
 
@@ -123,7 +143,7 @@ class HotShotFuncProfile:
         Every profiler has its own log file (the name of which is derived from
         the function name).
 
-        FuncProfile regsters an atexit handler that prints profiling
+        HotShotFuncProfile registers an atexit handler that prints profiling
         information to sys.stderr when the program terminates.
 
         The log file is not removed and remains there to clutter the current
@@ -182,7 +202,7 @@ class HotShotFuncCoverage:
         Every profiler has its own log file (the name of which is derived from
         the function name).
 
-        FuncProfile regsters an atexit handler that prints profiling
+        HotShotFuncCoverage registers an atexit handler that prints profiling
         information to sys.stderr when the program terminates.
 
         The log file is not removed and remains there to clutter the current
@@ -252,7 +272,7 @@ class TraceFuncCoverage:
         Every profiler has its own log file (the name of which is derived from
         the function name).
 
-        FuncProfile regsters an atexit handler that prints profiling
+        TraceFuncCoverage registers an atexit handler that prints profiling
         information to sys.stderr when the program terminates.
 
         The log file is not removed and remains there to clutter the current
