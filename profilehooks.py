@@ -41,6 +41,7 @@ Copyright (c) 2004 Marius Gedminas <marius@pov.lt>
 
 This module is GPLed; email me if you prefer a different open source licence.
 """
+# $Id$
 
 import _hotshot
 import atexit
