@@ -26,7 +26,7 @@ Caveats
   I don't know what will happen if a decorated function will try to call
   another decorated function.  All decorators probably need to explicitly
   support nested profiling (currently TraceFuncCoverage is the only one that
-  supports this.)
+  supports this, while HotShotFuncProfile has support for recursive functions.)
 
   Profiling with hotshot creates temporary files (*.prof for profiling,
   *.cprof for coverage) in the current directory.  These files are not cleaned
@@ -36,6 +36,9 @@ Caveats
   lower line counts and some lines errorneously marked as never executed.  For
   this reason coverage analysis now uses trace.py which is slower, but more
   accurate.
+
+  Decorating functions causes doctest.testmod() to ignore doctests in those
+  functions.
 
 Copyright (c) 2004 Marius Gedminas <marius@pov.lt>
 
@@ -76,7 +79,9 @@ def profile(fn):
     fp = HotShotFuncProfile(fn)
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
-    return lambda *args, **kw: fp(*args, **kw)
+    new_fn = lambda *args, **kw: fp(*args, **kw)
+    new_fn.__doc__ = fn.__doc__
+    return new_fn
 
 
 def coverage(fn):
@@ -101,11 +106,16 @@ def coverage(fn):
     fp = TraceFuncCoverage(fn) # or HotShotFuncCoverage
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
-    return lambda *args, **kw: fp(*args, **kw)
+    new_fn = lambda *args, **kw: fp(*args, **kw)
+    new_fn.__doc__ = fn.__doc__
+    return new_fn
 
 
 class HotShotFuncProfile:
     """Profiler for a function (uses hotshot)."""
+
+    # This flag is shared between all instances
+    in_profiler = False
 
     def __init__(self, fn):
         """Creates a profiler for a function.
@@ -128,7 +138,14 @@ class HotShotFuncProfile:
     def __call__(self, *args, **kw):
         """Profile a singe call to the function."""
         self.ncalls += 1
-        return self.profiler.runcall(self.fn, *args, **kw)
+        if HotShotFuncProfile.in_profiler:
+            # handle recursive calls
+            return self.fn(*args, **kw)
+        try:
+            HotShotFuncProfile.in_profiler = True
+            return self.profiler.runcall(self.fn, *args, **kw)
+        finally:
+            HotShotFuncProfile.in_profiler = False
 
     def atexit(self):
         """Stop profiling and print profile information to sys.stderr.
