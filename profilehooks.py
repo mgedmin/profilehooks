@@ -5,7 +5,18 @@ This module contains a couple of decorators (`profile` and `coverage`) that
 can be used to wrap functions and/or methods to produce profiles and line
 coverage reports.
 
-Usage example:
+Usage example (Python 2.4 or newer):
+
+    from profilehooks import profile, coverage
+
+    @profile    # or @coverage
+    def fn(n):
+        if n < 2: return 1
+        else: return n * fn(n-1)
+
+    print fn(42)
+
+Usage example (Python 2.3 or older):
 
     from profilehooks import profile, coverage
 
@@ -28,9 +39,12 @@ Caveats
   support nested profiling (currently TraceFuncCoverage is the only one that
   supports this, while HotShotFuncProfile has support for recursive functions.)
 
-  Profiling with hotshot creates temporary files (*.prof for profiling,
-  *.cprof for coverage) in the current directory.  These files are not cleaned
-  up.
+  Profiling with hotshot creates temporary files (*.prof and *.prof.pickle for
+  profiling, *.cprof for coverage) in the current directory.  These files are
+  not cleaned up.  (In fact, the *.pickle versions are intentionally written
+  out in case you want to look at the profiler results without having to parse
+  the big *.prof file with hotshot.stats.load, which takes ages.  Just unpickle
+  the file and you'll get a pstats object.)
 
   Coverage analysis with hotshot seems to miss some executions resulting in
   lower line counts and some lines errorneously marked as never executed.  For
@@ -40,7 +54,7 @@ Caveats
   Decorating functions causes doctest.testmod() to ignore doctests in those
   functions.
 
-Copyright (c) 2004 Marius Gedminas <marius@pov.lt>
+Copyright (c) 2004,2005 Marius Gedminas <marius@pov.lt>
 
 This module is GPLed; email me if you prefer a different open source licence.
 """
@@ -51,6 +65,7 @@ import atexit
 import hotshot
 import hotshot.log
 import hotshot.stats
+import cPickle as pickle
 import inspect
 import sys
 import trace
@@ -184,7 +199,10 @@ class HotShotFuncProfile:
         stats = hotshot.stats.load(self.logfilename)
         stats.strip_dirs()
         stats.sort_stats('time', 'calls')
-        stats.print_stats(20)
+        stats.print_stats(40)
+        # hotshot.stats.load takes ages, and the .prof file eats megabytes, but
+        # a pickled stats object is small and fast
+        pickle.dump(stats, file(self.logfilename + '.pickle', 'w'))
 
 
 class HotShotFuncCoverage:
