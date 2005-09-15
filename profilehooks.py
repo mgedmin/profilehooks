@@ -72,26 +72,33 @@ import trace
 import re
 
 
-def profile(fn):
+def profile(fn=None, skip=0):
     """Mark `fn` for profiling.
 
     Profiling results will be printed to sys.stdout on program termination.
+
+    If `skip` is > 0, first `skip` calls to `fn` will not be profiled.
 
     Usage:
 
         def fn(...):
             ...
-        fn = profile(fn)
+        fn = profile(fn, skip=1)
 
     If you are using Python 2.4, you should be able to use the decorator
     syntax:
 
-        @profile
+        @profile(skip=3)
         def fn(...):
             ...
 
     """
-    fp = HotShotFuncProfile(fn)
+    if fn is None: # @profile() syntax -- we are a decorator maker
+        def decorator(fn):
+            return profile(fn, skip=skip)
+        return decorator
+    # @profile syntax -- we are a decorator.
+    fp = HotShotFuncProfile(fn, skip=skip)
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
     def new_fn(*args, **kw):
@@ -152,7 +159,7 @@ class HotShotFuncProfile:
     # This flag is shared between all instances
     in_profiler = False
 
-    def __init__(self, fn):
+    def __init__(self, fn, skip=0):
         """Creates a profiler for a function.
 
         Every profiler has its own log file (the name of which is derived from
@@ -168,11 +175,17 @@ class HotShotFuncProfile:
         self.logfilename = fn.__name__ + ".prof"
         self.profiler = hotshot.Profile(self.logfilename)
         self.ncalls = 0
+        self.skip = skip
+        self.skipped = 0
         atexit.register(self.atexit)
 
     def __call__(self, *args, **kw):
         """Profile a singe call to the function."""
         self.ncalls += 1
+        if self.skip > 0:
+            self.skip -= 1
+            self.skipped += 1
+            return self.fn(*args, **kw)
         if HotShotFuncProfile.in_profiler:
             # handle recursive calls
             return self.fn(*args, **kw)
@@ -194,7 +207,11 @@ class HotShotFuncProfile:
         print
         print "*** PROFILER RESULTS ***"
         print "%s (%s:%s)" % (funcname, filename, lineno)
-        print "function called %d times" % self.ncalls
+        print "function called %d times" % self.ncalls,
+        if self.skipped:
+            print "(%d calls not profiled)" % self.skipped
+        else:
+            print
         print
         stats = hotshot.stats.load(self.logfilename)
         stats.strip_dirs()
