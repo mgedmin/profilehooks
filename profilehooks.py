@@ -214,12 +214,13 @@ class HotShotFuncProfile:
             print
         print
         stats = hotshot.stats.load(self.logfilename)
-        stats.strip_dirs()
-        stats.sort_stats('time', 'calls')
-        stats.print_stats(40)
         # hotshot.stats.load takes ages, and the .prof file eats megabytes, but
         # a pickled stats object is small and fast
         pickle.dump(stats, file(self.logfilename + '.pickle', 'w'))
+        # it is best to pickle before strip_dirs
+        stats.strip_dirs()
+        stats.sort_stats('time', 'calls')
+        stats.print_stats(40)
 
 
 class HotShotFuncCoverage:
