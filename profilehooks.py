@@ -34,6 +34,9 @@ on program termination.
 
 Caveats
 
+  A thread on python-dev convinced me that hotshot produces bogus numbers.
+  See http://mail.python.org/pipermail/python-dev/2005-November/058264.html
+
   I don't know what will happen if a decorated function will try to call
   another decorated function.  All decorators probably need to explicitly
   support nested profiling (currently TraceFuncCoverage is the only one that
@@ -60,16 +63,26 @@ This module is GPLed; email me if you prefer a different open source licence.
 """
 # $Id$
 
-import _hotshot
 import atexit
-import hotshot
-import hotshot.log
-import hotshot.stats
-import cPickle as pickle
 import inspect
 import sys
-import trace
 import re
+import cPickle as pickle
+
+# For profiling
+from profile import Profile
+import pstats
+
+# For hotshot profiling (inaccurate!)
+import hotshot
+import hotshot.stats
+
+# For trace.py coverage
+import trace
+
+# For hotshot coverage (inaccurate!; uses undocumented APIs; might break)
+import _hotshot
+import hotshot.log
 
 
 def profile(fn=None, skip=0):
@@ -98,7 +111,7 @@ def profile(fn=None, skip=0):
             return profile(fn, skip=skip)
         return decorator
     # @profile syntax -- we are a decorator.
-    fp = HotShotFuncProfile(fn, skip=skip)
+    fp = FuncProfile(fn, skip=skip) # or HotShotFuncProfile
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
     def new_fn(*args, **kw):
@@ -151,6 +164,74 @@ def coverage_with_hotshot(fn):
         return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
     return new_fn
+
+
+class FuncProfile:
+    """Profiler for a function (uses profile)."""
+
+    # This flag is shared between all instances
+    in_profiler = False
+
+    def __init__(self, fn, skip=0):
+        """Creates a profiler for a function.
+
+        Every profiler has its own log file (the name of which is derived from
+        the function name).
+
+        HotShotFuncProfile registers an atexit handler that prints profiling
+        information to sys.stderr when the program terminates.
+
+        The log file is not removed and remains there to clutter the current
+        working directory.
+        """
+        self.fn = fn
+        self.stats = pstats.Stats(Profile())
+        self.ncalls = 0
+        self.skip = skip
+        self.skipped = 0
+        atexit.register(self.atexit)
+
+    def __call__(self, *args, **kw):
+        """Profile a singe call to the function."""
+        self.ncalls += 1
+        if self.skip > 0:
+            self.skip -= 1
+            self.skipped += 1
+            return self.fn(*args, **kw)
+        if FuncProfile.in_profiler:
+            # handle recursive calls
+            return self.fn(*args, **kw)
+        # You cannot reuse the same profiler for many calls and accumulate
+        # stats that way.  :-/
+        profiler = Profile()
+        try:
+            FuncProfile.in_profiler = True
+            return profiler.runcall(self.fn, *args, **kw)
+        finally:
+            FuncProfile.in_profiler = False
+            self.stats.add(profiler)
+
+    def atexit(self):
+        """Stop profiling and print profile information to sys.stderr.
+
+        This function is registered as an atexit hook.
+        """
+        funcname = self.fn.__name__
+        filename = self.fn.func_code.co_filename
+        lineno = self.fn.func_code.co_firstlineno
+        print
+        print "*** PROFILER RESULTS ***"
+        print "%s (%s:%s)" % (funcname, filename, lineno)
+        print "function called %d times" % self.ncalls,
+        if self.skipped:
+            print "(%d calls not profiled)" % self.skipped
+        else:
+            print
+        print
+        stats = self.stats
+        stats.strip_dirs()
+        stats.sort_stats('time', 'calls')
+        stats.print_stats(40)
 
 
 class HotShotFuncProfile:
