@@ -57,7 +57,7 @@ Caveats
   Decorating functions causes doctest.testmod() to ignore doctests in those
   functions.
 
-Copyright (c) 2004,2005 Marius Gedminas <marius@pov.lt>
+Copyright (c) 2004--2006 Marius Gedminas <marius@pov.lt>
 
 This module is GPLed; email me if you prefer a different open source licence.
 """
@@ -85,12 +85,15 @@ import _hotshot
 import hotshot.log
 
 
-def profile(fn=None, skip=0):
+def profile(fn=None, skip=0, filename=None):
     """Mark `fn` for profiling.
 
     Profiling results will be printed to sys.stdout on program termination.
 
     If `skip` is > 0, first `skip` calls to `fn` will not be profiled.
+
+    If `filename` is specified, the profile stats will be pickled and stored in
+    a file.
 
     Usage:
 
@@ -105,13 +108,19 @@ def profile(fn=None, skip=0):
         def fn(...):
             ...
 
+    or just
+
+        @profile
+        def fn(...):
+            ...
+
     """
     if fn is None: # @profile() syntax -- we are a decorator maker
         def decorator(fn):
-            return profile(fn, skip=skip)
+            return profile(fn, skip=skip, filename=filename)
         return decorator
     # @profile syntax -- we are a decorator.
-    fp = FuncProfile(fn, skip=skip) # or HotShotFuncProfile
+    fp = FuncProfile(fn, skip=skip, filename=filename) # or HotShotFuncProfile
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
     def new_fn(*args, **kw):
@@ -172,7 +181,7 @@ class FuncProfile:
     # This flag is shared between all instances
     in_profiler = False
 
-    def __init__(self, fn, skip=0):
+    def __init__(self, fn, skip=0, filename=None):
         """Creates a profiler for a function.
 
         Every profiler has its own log file (the name of which is derived from
@@ -185,6 +194,7 @@ class FuncProfile:
         working directory.
         """
         self.fn = fn
+        self.filename = filename
         self.stats = pstats.Stats(Profile())
         self.ncalls = 0
         self.skip = skip
@@ -229,8 +239,10 @@ class FuncProfile:
             print
         print
         stats = self.stats
+        if self.filename:
+            pickle.dump(stats, file(self.filename, 'w'))
         stats.strip_dirs()
-        stats.sort_stats('time', 'calls')
+        stats.sort_stats('cumulative', 'time', 'calls')
         stats.print_stats(40)
 
 
@@ -240,7 +252,7 @@ class HotShotFuncProfile:
     # This flag is shared between all instances
     in_profiler = False
 
-    def __init__(self, fn, skip=0):
+    def __init__(self, fn, skip=0, filename=None):
         """Creates a profiler for a function.
 
         Every profiler has its own log file (the name of which is derived from
@@ -253,7 +265,11 @@ class HotShotFuncProfile:
         working directory.
         """
         self.fn = fn
-        self.logfilename = fn.__name__ + ".prof"
+        self.filename = filename
+        if self.filename:
+            self.logfilename = filename + ".raw"
+        else:
+            self.logfilename = fn.__name__ + ".prof"
         self.profiler = hotshot.Profile(self.logfilename)
         self.ncalls = 0
         self.skip = skip
@@ -297,10 +313,11 @@ class HotShotFuncProfile:
         stats = hotshot.stats.load(self.logfilename)
         # hotshot.stats.load takes ages, and the .prof file eats megabytes, but
         # a pickled stats object is small and fast
-        pickle.dump(stats, file(self.logfilename + '.pickle', 'w'))
+        if self.filename:
+            pickle.dump(stats, file(self.filename, 'w'))
         # it is best to pickle before strip_dirs
         stats.strip_dirs()
-        stats.sort_stats('time', 'calls')
+        stats.sort_stats('cumulative', 'time', 'calls')
         stats.print_stats(40)
 
 
