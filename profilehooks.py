@@ -30,7 +30,8 @@ Usage example (Python 2.3 or older):
     print fn(42)
 
 Reports for all thusly decorated functions will be printed to sys.stdout
-on program termination.
+on program termination.  You can alternatively request for immediate
+reports for each call by passing immediate=True to the profile decorator.
 
 Caveats
 
@@ -85,10 +86,11 @@ import _hotshot
 import hotshot.log
 
 
-def profile(fn=None, skip=0, filename=None):
+def profile(fn=None, skip=0, filename=None, immediate=False):
     """Mark `fn` for profiling.
 
-    Profiling results will be printed to sys.stdout on program termination.
+    If `immediate` is False, profiling results will be printed to sys.stdout on
+    program termination.  Otherwise results will be printed after each call.
 
     If `skip` is > 0, first `skip` calls to `fn` will not be profiled.
 
@@ -117,10 +119,12 @@ def profile(fn=None, skip=0, filename=None):
     """
     if fn is None: # @profile() syntax -- we are a decorator maker
         def decorator(fn):
-            return profile(fn, skip=skip, filename=filename)
+            return profile(fn, skip=skip, filename=filename,
+                           immediate=immediate)
         return decorator
     # @profile syntax -- we are a decorator.
-    fp = FuncProfile(fn, skip=skip, filename=filename) # or HotShotFuncProfile
+    fp = FuncProfile(fn, skip=skip, filename=filename, immediate=immediate)
+         # or HotShotFuncProfile
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
     def new_fn(*args, **kw):
@@ -181,7 +185,7 @@ class FuncProfile:
     # This flag is shared between all instances
     in_profiler = False
 
-    def __init__(self, fn, skip=0, filename=None):
+    def __init__(self, fn, skip=0, filename=None, immediate=False):
         """Creates a profiler for a function.
 
         Every profiler has its own log file (the name of which is derived from
@@ -195,6 +199,7 @@ class FuncProfile:
         """
         self.fn = fn
         self.filename = filename
+        self.immediate = immediate
         self.stats = pstats.Stats(Profile())
         self.ncalls = 0
         self.skip = skip
@@ -220,12 +225,12 @@ class FuncProfile:
         finally:
             FuncProfile.in_profiler = False
             self.stats.add(profiler)
+            if self.immediate:
+                self.print_stats()
+                self.reset_stats()
 
-    def atexit(self):
-        """Stop profiling and print profile information to sys.stderr.
-
-        This function is registered as an atexit hook.
-        """
+    def print_stats(self):
+        """Print profile information to sys.stdout."""
         funcname = self.fn.__name__
         filename = self.fn.func_code.co_filename
         lineno = self.fn.func_code.co_firstlineno
@@ -244,6 +249,20 @@ class FuncProfile:
         stats.strip_dirs()
         stats.sort_stats('cumulative', 'time', 'calls')
         stats.print_stats(40)
+
+    def reset_stats(self):
+        """Reset accumulated profiler statistics."""
+        self.stats = pstats.Stats(Profile())
+        self.ncalls = 0
+        self.skipped = 0
+
+    def atexit(self):
+        """Stop profiling and print profile information to sys.stdout.
+
+        This function is registered as an atexit hook.
+        """
+        if not self.immediate:
+            self.print_stats()
 
 
 class HotShotFuncProfile:
