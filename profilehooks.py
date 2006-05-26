@@ -33,6 +33,10 @@ Reports for all thusly decorated functions will be printed to sys.stdout
 on program termination.  You can alternatively request for immediate
 reports for each call by passing immediate=True to the profile decorator.
 
+There's also a @timecall decorator for printing the time to sys.stderr
+every time a function is called, when you just want to get a rough measure
+instead of a detailed (but costly) profile.
+
 Caveats
 
   A thread on python-dev convinced me that hotshot produces bogus numbers.
@@ -84,6 +88,9 @@ import trace
 # For hotshot coverage (inaccurate!; uses undocumented APIs; might break)
 import _hotshot
 import hotshot.log
+
+# For timecall
+import time
 
 
 def profile(fn=None, skip=0, filename=None, immediate=False):
@@ -531,4 +538,35 @@ class FuncSource:
             lines.append(prefix + line)
             lineno += 1
         return ''.join(lines)
+
+
+def timecall(fn):
+    """Wrap `fn` and print its execution time.
+
+    Example:
+
+        @timecall
+        def somefunc(x, y):
+            time.sleep(x * y)
+
+        somefunc(2, 3)
+
+    will print
+
+        somefunc: 6.0 seconds
+
+    """
+    def new_fn(*args, **kw):
+        try:
+            start = time.time()
+            return fn(*args, **kw)
+        finally:
+            duration = time.time() - start
+            funcname = fn.__name__
+            filename = fn.func_code.co_filename
+            lineno = fn.func_code.co_firstlineno
+            print >> sys.stderr, "\n  %s (%s:%s):\n    %.3f seconds\n" % (
+                                        funcname, filename, lineno, duration)
+    new_fn.__doc__ = fn.__doc__
+    return new_fn
 
