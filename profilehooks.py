@@ -44,23 +44,26 @@ Caveats
 
   I don't know what will happen if a decorated function will try to call
   another decorated function.  All decorators probably need to explicitly
-  support nested profiling (currently TraceFuncCoverage is the only one that
-  supports this, while HotShotFuncProfile has support for recursive functions.)
+  support nested profiling (currently TraceFuncCoverage is the only one
+  that supports this, while HotShotFuncProfile has support for recursive
+  functions.)
 
-  Profiling with hotshot creates temporary files (*.prof and *.prof.pickle for
-  profiling, *.cprof for coverage) in the current directory.  These files are
-  not cleaned up.  (In fact, the *.pickle versions are intentionally written
-  out in case you want to look at the profiler results without having to parse
-  the big *.prof file with hotshot.stats.load, which takes ages.  Just unpickle
-  the file and you'll get a pstats object.)
+  Profiling with hotshot creates temporary files (*.prof and *.prof.pickle
+  for profiling, *.cprof for coverage) in the current directory.  These
+  files are not cleaned up.  (In fact, the *.pickle versions are
+  intentionally written out in case you want to look at the profiler
+  results without having to parse the big *.prof file with
+  hotshot.stats.load, which takes ages.  Just unpickle the file and you'll
+  get a pstats object.)
 
-  Coverage analysis with hotshot seems to miss some executions resulting in
-  lower line counts and some lines errorneously marked as never executed.  For
-  this reason coverage analysis now uses trace.py which is slower, but more
-  accurate.
+  Coverage analysis with hotshot seems to miss some executions resulting
+  in lower line counts and some lines errorneously marked as never
+  executed.  For this reason coverage analysis now uses trace.py which is
+  slower, but more accurate.
 
-  Decorating functions causes doctest.testmod() to ignore doctests in those
-  functions.  (I think I know how to fix this, see the TODO comments.)
+  Decorating functions causes doctest.testmod() to ignore doctests in
+  those functions.  (I think I know how to fix this, see the TODO
+  comments.)
 
 Copyright (c) 2004--2007 Marius Gedminas <marius@pov.lt>
 Copyright (c) 2007 Hanno Schlichting
@@ -127,14 +130,15 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
 
     If `skip` is > 0, first `skip` calls to `fn` will not be profiled.
 
-    If `immediate` is False, profiling results will be printed to sys.stdout on
-    program termination.  Otherwise results will be printed after each call.
+    If `immediate` is False, profiling results will be printed to
+    sys.stdout on program termination.  Otherwise results will be printed
+    after each call.
 
-    If `dirs` is False only the name of the file will be printed.  Otherwise
-    the full path is used.
+    If `dirs` is False only the name of the file will be printed.
+    Otherwise the full path is used.
 
-    `sort` can be a list of sort keys (defaulting to ['cumulative', 'time',
-    'calls']).  The following ones are recognized::
+    `sort` can be a list of sort keys (defaulting to ['cumulative',
+    'time', 'calls']).  The following ones are recognized::
 
         'calls'      -- call count
         'cumulative' -- cumulative time
@@ -149,9 +153,9 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
 
     `entries` limits the output to the first N entries.
 
-    If `filename` is specified, the profile stats will be pickled and stored in
-    a file.  You can later unpickle it and inspect the pstats.Stats object as
-    you wish.
+    If `filename` is specified, the profile stats will be pickled and
+    stored in a file.  You can later unpickle it and inspect the
+    pstats.Stats object as you wish.
 
     Usage::
 
@@ -252,8 +256,8 @@ class FuncProfile:
                  sort=None, entries=40):
         """Creates a profiler for a function.
 
-        Every profiler has its own log file (the name of which is derived from
-        the function name).
+        Every profiler has its own log file (the name of which is derived
+        from the function name).
 
         FuncProfile registers an atexit handler that prints profiling
         information to sys.stderr when the program terminates.
@@ -341,14 +345,14 @@ class HotShotFuncProfile:
     def __init__(self, fn, skip=0, filename=None):
         """Creates a profiler for a function.
 
-        Every profiler has its own log file (the name of which is derived from
-        the function name).
+        Every profiler has its own log file (the name of which is derived
+        from the function name).
 
-        HotShotFuncProfile registers an atexit handler that prints profiling
-        information to sys.stderr when the program terminates.
+        HotShotFuncProfile registers an atexit handler that prints
+        profiling information to sys.stderr when the program terminates.
 
-        The log file is not removed and remains there to clutter the current
-        working directory.
+        The log file is not removed and remains there to clutter the
+        current working directory.
         """
         self.fn = fn
         self.filename = filename
@@ -419,14 +423,14 @@ class HotShotFuncCoverage:
     def __init__(self, fn):
         """Creates a profiler for a function.
 
-        Every profiler has its own log file (the name of which is derived from
-        the function name).
+        Every profiler has its own log file (the name of which is derived
+        from the function name).
 
-        HotShotFuncCoverage registers an atexit handler that prints profiling
-        information to sys.stderr when the program terminates.
+        HotShotFuncCoverage registers an atexit handler that prints
+        profiling information to sys.stderr when the program terminates.
 
-        The log file is not removed and remains there to clutter the current
-        working directory.
+        The log file is not removed and remains there to clutter the
+        current working directory.
         """
         self.fn = fn
         self.logfilename = fn.__name__ + ".cprof"
@@ -489,14 +493,14 @@ class TraceFuncCoverage:
     def __init__(self, fn):
         """Creates a profiler for a function.
 
-        Every profiler has its own log file (the name of which is derived from
-        the function name).
+        Every profiler has its own log file (the name of which is derived
+        from the function name).
 
-        TraceFuncCoverage registers an atexit handler that prints profiling
-        information to sys.stderr when the program terminates.
+        TraceFuncCoverage registers an atexit handler that prints
+        profiling information to sys.stderr when the program terminates.
 
-        The log file is not removed and remains there to clutter the current
-        working directory.
+        The log file is not removed and remains there to clutter the
+        current working directory.
         """
         self.fn = fn
         self.logfilename = fn.__name__ + ".cprof"
