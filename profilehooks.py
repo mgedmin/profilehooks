@@ -61,10 +61,6 @@ Caveats
   executed.  For this reason coverage analysis now uses trace.py which is
   slower, but more accurate.
 
-  Decorating functions causes doctest.testmod() to ignore doctests in
-  those functions.  (I think I know how to fix this, see the TODO
-  comments.)
-
 Copyright (c) 2004--2007 Marius Gedminas <marius@pov.lt>
 Copyright (c) 2007 Hanno Schlichting
 
@@ -194,7 +190,9 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
     def new_fn(*args, **kw):
         return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
-    # TODO: also preserve __module__, __name__ and a few other important attrs
+    new_fn.__name__ = fn.__name__
+    new_fn.__dict__ = fn.__dict__
+    new_fn.__module__ = fn.__module__
     return new_fn
 
 
@@ -223,7 +221,9 @@ def coverage(fn):
     def new_fn(*args, **kw):
         return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
-    # TODO: also preserve __module__, __name__ and a few other important attrs
+    new_fn.__name__ = fn.__name__
+    new_fn.__dict__ = fn.__dict__
+    new_fn.__module__ = fn.__module__
     return new_fn
 
 
@@ -242,7 +242,9 @@ def coverage_with_hotshot(fn):
     def new_fn(*args, **kw):
         return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
-    # TODO: also preserve __module__, __name__ and a few other important attrs
+    new_fn.__name__ = fn.__name__
+    new_fn.__dict__ = fn.__dict__
+    new_fn.__module__ = fn.__module__
     return new_fn
 
 
@@ -632,6 +634,8 @@ def timecall(fn):
             print >> sys.stderr, "\n  %s (%s:%s):\n    %.3f seconds\n" % (
                                         funcname, filename, lineno, duration)
     new_fn.__doc__ = fn.__doc__
-    # TODO: also preserve __module__, __name__ and a few other important attrs
+    new_fn.__name__ = fn.__name__
+    new_fn.__dict__ = fn.__dict__
+    new_fn.__module__ = fn.__module__
     return new_fn
 
