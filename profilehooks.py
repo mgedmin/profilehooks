@@ -5,7 +5,7 @@ This module contains a couple of decorators (`profile` and `coverage`) that
 can be used to wrap functions and/or methods to produce profiles and line
 coverage reports.
 
-Usage example (Python 2.4 or newer):
+Usage example (Python 2.4 or newer)::
 
     from profilehooks import profile, coverage
 
@@ -16,7 +16,7 @@ Usage example (Python 2.4 or newer):
 
     print fn(42)
 
-Usage example (Python 2.3 or older):
+Usage example (Python 2.3 or older)::
 
     from profilehooks import profile, coverage
 
@@ -60,9 +60,10 @@ Caveats
   accurate.
 
   Decorating functions causes doctest.testmod() to ignore doctests in those
-  functions.
+  functions.  (I think I know how to fix this, see the TODO comments.)
 
-Copyright (c) 2004--2006 Marius Gedminas <marius@pov.lt>
+Copyright (c) 2004--2007 Marius Gedminas <marius@pov.lt>
+Copyright (c) 2007 Hanno Schlichting
 
 Released under the MIT licence since December 2006:
 
@@ -89,10 +90,10 @@ Released under the MIT licence since December 2006:
 # $Id$
 
 __author__ = "Marius Gedminas (marius@gedmin.as)"
-__copyright__ = "Copyright 2004-2006, Marius Gedminas"
+__copyright__ = "Copyright 2004-2007, Marius Gedminas"
 __license__ = "MIT"
-__version__ = "1.0"
-__date__ = "2006-12-06"
+__version__ = "1.1"
+__date__ = "2007-11-07"
 
 
 import atexit
@@ -120,31 +121,52 @@ import hotshot.log
 import time
 
 
-def profile(fn=None, skip=0, filename=None, immediate=False):
+def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
+            sort=None, entries=40):
     """Mark `fn` for profiling.
+
+    If `skip` is > 0, first `skip` calls to `fn` will not be profiled.
 
     If `immediate` is False, profiling results will be printed to sys.stdout on
     program termination.  Otherwise results will be printed after each call.
 
-    If `skip` is > 0, first `skip` calls to `fn` will not be profiled.
+    If `dirs` is False only the name of the file will be printed.  Otherwise
+    the full path is used.
+
+    `sort` can be a list of sort keys (defaulting to ['cumulative', 'time',
+    'calls']).  The following ones are recognized::
+
+        'calls'      -- call count
+        'cumulative' -- cumulative time
+        'file'       -- file name
+        'line'       -- line number
+        'module'     -- file name
+        'name'       -- function name
+        'nfl'        -- name/file/line
+        'pcalls'     -- call count
+        'stdname'    -- standard name
+        'time'       -- internal time
+
+    `entries` limits the output to the first N entries.
 
     If `filename` is specified, the profile stats will be pickled and stored in
-    a file.
+    a file.  You can later unpickle it and inspect the pstats.Stats object as
+    you wish.
 
-    Usage:
+    Usage::
 
         def fn(...):
             ...
         fn = profile(fn, skip=1)
 
     If you are using Python 2.4, you should be able to use the decorator
-    syntax:
+    syntax::
 
         @profile(skip=3)
         def fn(...):
             ...
 
-    or just
+    or just ::
 
         @profile
         def fn(...):
@@ -154,16 +176,21 @@ def profile(fn=None, skip=0, filename=None, immediate=False):
     if fn is None: # @profile() syntax -- we are a decorator maker
         def decorator(fn):
             return profile(fn, skip=skip, filename=filename,
-                           immediate=immediate)
+                           immediate=immediate, dirs=dirs,
+                           sort=sort, entries=entries)
         return decorator
     # @profile syntax -- we are a decorator.
-    fp = FuncProfile(fn, skip=skip, filename=filename, immediate=immediate)
+    fp = FuncProfile(fn, skip=skip, filename=filename,
+                     immediate=immediate, dirs=dirs,
+                     sort=sort, entries=entries)
+    # fp = HotShotFuncProfile(fn, skip=skip, filename=filename, ...)
          # or HotShotFuncProfile
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
     def new_fn(*args, **kw):
         return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
+    # TODO: also preserve __module__, __name__ and a few other important attrs
     return new_fn
 
 
@@ -172,14 +199,14 @@ def coverage(fn):
 
     Results will be printed to sys.stdout on program termination.
 
-    Usage:
+    Usage::
 
         def fn(...):
             ...
         fn = coverage(fn)
 
     If you are using Python 2.4, you should be able to use the decorator
-    syntax:
+    syntax::
 
         @coverage
         def fn(...):
@@ -192,6 +219,7 @@ def coverage(fn):
     def new_fn(*args, **kw):
         return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
+    # TODO: also preserve __module__, __name__ and a few other important attrs
     return new_fn
 
 
@@ -210,6 +238,7 @@ def coverage_with_hotshot(fn):
     def new_fn(*args, **kw):
         return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
+    # TODO: also preserve __module__, __name__ and a few other important attrs
     return new_fn
 
 
@@ -219,21 +248,24 @@ class FuncProfile:
     # This flag is shared between all instances
     in_profiler = False
 
-    def __init__(self, fn, skip=0, filename=None, immediate=False):
+    def __init__(self, fn, skip=0, filename=None, immediate=False, dirs=False,
+                 sort=None, entries=40):
         """Creates a profiler for a function.
 
         Every profiler has its own log file (the name of which is derived from
         the function name).
 
-        HotShotFuncProfile registers an atexit handler that prints profiling
+        FuncProfile registers an atexit handler that prints profiling
         information to sys.stderr when the program terminates.
-
-        The log file is not removed and remains there to clutter the current
-        working directory.
         """
         self.fn = fn
         self.filename = filename
         self.immediate = immediate
+        self.dirs = dirs
+        self.sort = sort or ('cumulative', 'time', 'calls')
+        if isinstance(self.sort, str):
+            self.sort = (self.sort, )
+        self.entries = entries
         self.stats = pstats.Stats(Profile())
         self.ncalls = 0
         self.skip = skip
@@ -280,9 +312,10 @@ class FuncProfile:
         stats = self.stats
         if self.filename:
             pickle.dump(stats, file(self.filename, 'w'))
-        stats.strip_dirs()
-        stats.sort_stats('cumulative', 'time', 'calls')
-        stats.print_stats(40)
+        if not self.dirs:
+            stats.strip_dirs()
+        stats.sort_stats(*self.sort)
+        stats.print_stats(self.entries)
 
     def reset_stats(self):
         """Reset accumulated profiler statistics."""
@@ -570,7 +603,7 @@ class FuncSource:
 def timecall(fn):
     """Wrap `fn` and print its execution time.
 
-    Example:
+    Example::
 
         @timecall
         def somefunc(x, y):
@@ -578,7 +611,7 @@ def timecall(fn):
 
         somefunc(2, 3)
 
-    will print
+    will print ::
 
         somefunc: 6.0 seconds
 
@@ -595,5 +628,6 @@ def timecall(fn):
             print >> sys.stderr, "\n  %s (%s:%s):\n    %.3f seconds\n" % (
                                         funcname, filename, lineno, duration)
     new_fn.__doc__ = fn.__doc__
+    # TODO: also preserve __module__, __name__ and a few other important attrs
     return new_fn
 
