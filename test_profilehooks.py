@@ -27,7 +27,7 @@ def doctest_timecall():
         >>> r
         7
 
-    Ever call also prints to stderr
+    Every call also prints to stderr
 
         >>> print sys.stderr.getvalue()
         <BLANKLINE>
