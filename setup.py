@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='profilehooks',
-    version='1.1',
+    version='1.2pre',
     author='Marius Gedminas',
     author_email='marius@gedmin.as',
     url='http://mg.pov.lt/profilehooks/',
@@ -19,5 +19,6 @@ setup(
     license='MIT',
 
     py_modules=['profilehooks'],
+    test_suite='test_profilehooks',
     zip_safe=False,
 )
