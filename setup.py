@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='profilehooks',
-    version='1.2pre',
+    version='1.2',
     author='Marius Gedminas',
     author_email='marius@gedmin.as',
     url='http://mg.pov.lt/profilehooks/',
