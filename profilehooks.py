@@ -606,7 +606,7 @@ class FuncSource:
         return ''.join(lines)
 
 
-def timecall(fn):
+def timecall(fn=None, immediate=True):
     """Wrap `fn` and print its execution time.
 
     Example::
@@ -617,25 +617,63 @@ def timecall(fn):
 
         somefunc(2, 3)
 
-    will print ::
+    will print the time taken by somefunc on every call.  If you want just
+    a summary at program termination, use
 
-        somefunc: 6.0 seconds
+        @timecall(immediate=False)
 
     """
+    if fn is None: # @timecall() syntax -- we are a decorator maker
+        def decorator(fn):
+            return timecall(fn, immediate=immediate)
+        return decorator
+    # @timecall syntax -- we are a decorator.
+    fp = FuncTimer(fn, immediate=immediate)
+    # We cannot return fp or fp.__call__ directly as that would break method
+    # definitions, instead we need to return a plain function.
     def new_fn(*args, **kw):
-        try:
-            start = time.time()
-            return fn(*args, **kw)
-        finally:
-            duration = time.time() - start
-            funcname = fn.__name__
-            filename = fn.func_code.co_filename
-            lineno = fn.func_code.co_firstlineno
-            print >> sys.stderr, "\n  %s (%s:%s):\n    %.3f seconds\n" % (
-                                        funcname, filename, lineno, duration)
+        return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
     new_fn.__name__ = fn.__name__
     new_fn.__dict__ = fn.__dict__
     new_fn.__module__ = fn.__module__
     return new_fn
+
+
+class FuncTimer(object):
+
+    def __init__(self, fn, immediate):
+        self.fn = fn
+        self.ncalls = 0
+        self.totaltime = 0
+        self.immediate = immediate
+        if not immediate:
+            atexit.register(self.atexit)
+
+    def __call__(self, *args, **kw):
+        """Profile a singe call to the function."""
+        fn = self.fn
+        self.ncalls += 1
+        try:
+            start = time.time()
+            return fn(*args, **kw)
+        finally:
+            duration = time.time() - start
+            self.totaltime += duration
+            if self.immediate:
+                funcname = fn.__name__
+                filename = fn.func_code.co_filename
+                lineno = fn.func_code.co_firstlineno
+                print >> sys.stderr, "\n  %s (%s:%s):\n    %.3f seconds\n" % (
+                                        funcname, filename, lineno, duration)
+    def atexit(self):
+        if not self.ncalls:
+            return
+        funcname = self.fn.__name__
+        filename = self.fn.func_code.co_filename
+        lineno = self.fn.func_code.co_firstlineno
+        print ("\n  %s (%s:%s):\n"
+               "    %d calls, %.3f seconds (%.3f seconds per call)\n" % (
+                                funcname, filename, lineno, self.ncalls,
+                                self.totaltime, self.totaltime / self.ncalls))
 
