@@ -91,7 +91,7 @@ Released under the MIT licence since December 2006:
 __author__ = "Marius Gedminas (marius@gedmin.as)"
 __copyright__ = "Copyright 2004-2008, Marius Gedminas"
 __license__ = "MIT"
-__version__ = "1.2"
+__version__ = "1.3"
 __date__ = "2008-06-10"
 
 
