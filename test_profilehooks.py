@@ -87,6 +87,38 @@ def doctest_timecall_not_immediate():
     """
 
 
+def doctest_dump():
+    """Test that profiling can save the stats in a file.
+
+    Create a temporary file
+
+        >>> import tempfile
+        >>> tf = tempfile.mkstemp()
+
+    Now create some stats in that file
+
+        >>> @profilehooks.profile(filename=tf[1])
+        ... def f():
+        ...     pass
+        >>> sys.exitfunc() # doctest:+ELLIPSIS
+        <BLANKLINE>
+        ...
+        <BLANKLINE>
+
+    Let's see whether we can open the stats
+
+        >>> import pstats
+        >>> pstats.Stats(tf[1]) # doctest:+ELLIPSIS
+        <pstats.Stats instance at ...>
+
+    Remove the temporary file again
+
+        >>> import os
+        >>> os.remove(tf[1])
+
+    """
+
+
 def setUp(test):
     test.real_stderr = sys.stderr
     stderr_wrapper = StringIO.StringIO()

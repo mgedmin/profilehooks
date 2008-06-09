@@ -48,21 +48,21 @@ Caveats
   that supports this, while HotShotFuncProfile has support for recursive
   functions.)
 
-  Profiling with hotshot creates temporary files (*.prof and *.prof.pickle
-  for profiling, *.cprof for coverage) in the current directory.  These
-  files are not cleaned up.  (In fact, the *.pickle versions are
-  intentionally written out in case you want to look at the profiler
-  results without having to parse the big *.prof file with
-  hotshot.stats.load, which takes ages.  Just unpickle the file and you'll
-  get a pstats object.)
+  Profiling with hotshot creates temporary files (*.prof for profiling,
+  *.cprof for coverage) in the current directory.  These files are not
+  cleaned up.  Exception: when you specify a filename to the profile
+  decorator (to store the pstats.Stats object for later inspection),
+  the temporary file will be the filename you specified with '.raw'
+  appended at the end.
 
   Coverage analysis with hotshot seems to miss some executions resulting
   in lower line counts and some lines errorneously marked as never
   executed.  For this reason coverage analysis now uses trace.py which is
   slower, but more accurate.
 
-Copyright (c) 2004--2007 Marius Gedminas <marius@pov.lt>
+Copyright (c) 2004--2008 Marius Gedminas <marius@pov.lt>
 Copyright (c) 2007 Hanno Schlichting
+Copyright (c) 2008 Florian Schulze
 
 Released under the MIT licence since December 2006:
 
@@ -89,17 +89,16 @@ Released under the MIT licence since December 2006:
 # $Id$
 
 __author__ = "Marius Gedminas (marius@gedmin.as)"
-__copyright__ = "Copyright 2004-2007, Marius Gedminas"
+__copyright__ = "Copyright 2004-2008, Marius Gedminas"
 __license__ = "MIT"
-__version__ = "1.1"
-__date__ = "2007-11-07"
+__version__ = "1.2"
+__date__ = "2008-06-10"
 
 
 import atexit
 import inspect
 import sys
 import re
-import cPickle as pickle
 
 # For profiling
 from profile import Profile
@@ -149,9 +148,8 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
 
     `entries` limits the output to the first N entries.
 
-    If `filename` is specified, the profile stats will be pickled and
-    stored in a file.  You can later unpickle it and inspect the
-    pstats.Stats object as you wish.
+    If `filename` is specified, the profile stats will be stored in the
+    named file.  You can load them pstats.Stats(filename).
 
     Usage::
 
@@ -317,7 +315,7 @@ class FuncProfile:
         print
         stats = self.stats
         if self.filename:
-            pickle.dump(stats, file(self.filename, 'w'))
+            stats.dump_stats(self.filename)
         if not self.dirs:
             stats.strip_dirs()
         stats.sort_stats(*self.sort)
@@ -404,10 +402,10 @@ class HotShotFuncProfile:
         print
         stats = hotshot.stats.load(self.logfilename)
         # hotshot.stats.load takes ages, and the .prof file eats megabytes, but
-        # a pickled stats object is small and fast
+        # a saved stats object is small and fast
         if self.filename:
-            pickle.dump(stats, file(self.filename, 'w'))
-        # it is best to pickle before strip_dirs
+            stats.dump_stats(self.filename)
+        # it is best to save before strip_dirs
         stats.strip_dirs()
         stats.sort_stats('cumulative', 'time', 'calls')
         stats.print_stats(40)
