@@ -3,7 +3,9 @@ Profiling hooks
 
 This module contains a couple of decorators (`profile` and `coverage`) that
 can be used to wrap functions and/or methods to produce profiles and line
-coverage reports.
+coverage reports.  There's a third convenient decorator (`timecall`) that
+measures the duration of function execution without the extra profiling
+overhead.
 
 Usage example (Python 2.4 or newer)::
 
@@ -89,10 +91,10 @@ Released under the MIT licence since December 2006:
 # $Id$
 
 __author__ = "Marius Gedminas (marius@gedmin.as)"
-__copyright__ = "Copyright 2004-2008, Marius Gedminas"
+__copyright__ = "Copyright 2004-2009 Marius Gedminas"
 __license__ = "MIT"
-__version__ = "1.3"
-__date__ = "2008-06-10"
+__version__ = "1.4"
+__date__ = "2009-03-31"
 
 
 import atexit
@@ -105,22 +107,37 @@ from profile import Profile
 import pstats
 
 # For hotshot profiling (inaccurate!)
-import hotshot
-import hotshot.stats
+try:
+    import hotshot
+    import hotshot.stats
+except ImportError:
+    hotshot = None
 
 # For trace.py coverage
 import trace
 
 # For hotshot coverage (inaccurate!; uses undocumented APIs; might break)
-import _hotshot
-import hotshot.log
+if hotshot is not None:
+    import _hotshot
+    import hotshot.log
+
+# For cProfile profiling (best)
+try:
+    import cProfile
+except ImportError:
+    cProfile = None
 
 # For timecall
 import time
 
 
+# registry of available profilers
+AVAILABLE_PROFILERS = {}
+
+
 def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
-            sort=None, entries=40):
+            sort=None, entries=40,
+            profiler=('cProfile', 'profile', 'hotshot')):
     """Mark `fn` for profiling.
 
     If `skip` is > 0, first `skip` calls to `fn` will not be profiled.
@@ -147,6 +164,10 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
         'time'       -- internal time
 
     `entries` limits the output to the first N entries.
+
+    `profiler` can be used to select the preferred profiler, or specify a
+    sequence of them, in order of preference.  The default is ('cProfile'.
+    'profile', 'hotshot').
 
     If `filename` is specified, the profile stats will be stored in the
     named file.  You can load them pstats.Stats(filename).
@@ -175,12 +196,22 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
         def decorator(fn):
             return profile(fn, skip=skip, filename=filename,
                            immediate=immediate, dirs=dirs,
-                           sort=sort, entries=entries)
+                           sort=sort, entries=entries,
+                           profiler=profiler)
         return decorator
     # @profile syntax -- we are a decorator.
-    fp = FuncProfile(fn, skip=skip, filename=filename,
-                     immediate=immediate, dirs=dirs,
-                     sort=sort, entries=entries)
+    if isinstance(profiler, str):
+        profiler = [profiler]
+    for p in profiler:
+        if p in AVAILABLE_PROFILERS:
+            profiler_class = AVAILABLE_PROFILERS[p]
+            break
+    else:
+        raise ValueError('only these profilers are available: %s'
+                             % ', '.join(AVAILABLE_PROFILERS))
+    fp = profiler_class(fn, skip=skip, filename=filename,
+                        immediate=immediate, dirs=dirs,
+                        sort=sort, entries=entries)
     # fp = HotShotFuncProfile(fn, skip=skip, filename=filename, ...)
          # or HotShotFuncProfile
     # We cannot return fp or fp.__call__ directly as that would break method
@@ -246,11 +277,13 @@ def coverage_with_hotshot(fn):
     return new_fn
 
 
-class FuncProfile:
+class FuncProfile(object):
     """Profiler for a function (uses profile)."""
 
     # This flag is shared between all instances
     in_profiler = False
+
+    Profile = Profile
 
     def __init__(self, fn, skip=0, filename=None, immediate=False, dirs=False,
                  sort=None, entries=40):
@@ -263,6 +296,7 @@ class FuncProfile:
         information to sys.stderr when the program terminates.
         """
         self.fn = fn
+        self.skip = skip
         self.filename = filename
         self.immediate = immediate
         self.dirs = dirs
@@ -270,10 +304,7 @@ class FuncProfile:
         if isinstance(self.sort, str):
             self.sort = (self.sort, )
         self.entries = entries
-        self.stats = pstats.Stats(Profile())
-        self.ncalls = 0
-        self.skip = skip
-        self.skipped = 0
+        self.reset_stats()
         atexit.register(self.atexit)
 
     def __call__(self, *args, **kw):
@@ -288,7 +319,7 @@ class FuncProfile:
             return self.fn(*args, **kw)
         # You cannot reuse the same profiler for many calls and accumulate
         # stats that way.  :-/
-        profiler = Profile()
+        profiler = self.Profile()
         try:
             FuncProfile.in_profiler = True
             return profiler.runcall(self.fn, *args, **kw)
@@ -323,6 +354,7 @@ class FuncProfile:
 
     def reset_stats(self):
         """Reset accumulated profiler statistics."""
+        # Note: not using self.Profile, since pstats.Stats() fails then
         self.stats = pstats.Stats(Profile())
         self.ncalls = 0
         self.skipped = 0
@@ -336,144 +368,161 @@ class FuncProfile:
             self.print_stats()
 
 
-class HotShotFuncProfile:
-    """Profiler for a function (uses hotshot)."""
+AVAILABLE_PROFILERS['profile'] = FuncProfile
 
-    # This flag is shared between all instances
-    in_profiler = False
 
-    def __init__(self, fn, skip=0, filename=None):
-        """Creates a profiler for a function.
+if cProfile is not None:
 
-        Every profiler has its own log file (the name of which is derived
-        from the function name).
+    class CProfileFuncProfile(FuncProfile):
+        """Profiler for a function (uses cProfile)."""
 
-        HotShotFuncProfile registers an atexit handler that prints
-        profiling information to sys.stderr when the program terminates.
+        Profile = cProfile.Profile
 
-        The log file is not removed and remains there to clutter the
-        current working directory.
-        """
-        self.fn = fn
-        self.filename = filename
-        if self.filename:
-            self.logfilename = filename + ".raw"
-        else:
-            self.logfilename = fn.__name__ + ".prof"
-        self.profiler = hotshot.Profile(self.logfilename)
-        self.ncalls = 0
-        self.skip = skip
-        self.skipped = 0
-        atexit.register(self.atexit)
+    AVAILABLE_PROFILERS['cProfile'] = CProfileFuncProfile
 
-    def __call__(self, *args, **kw):
-        """Profile a singe call to the function."""
-        self.ncalls += 1
-        if self.skip > 0:
-            self.skip -= 1
-            self.skipped += 1
-            return self.fn(*args, **kw)
-        if HotShotFuncProfile.in_profiler:
-            # handle recursive calls
-            return self.fn(*args, **kw)
-        try:
-            HotShotFuncProfile.in_profiler = True
-            return self.profiler.runcall(self.fn, *args, **kw)
-        finally:
-            HotShotFuncProfile.in_profiler = False
 
-    def atexit(self):
-        """Stop profiling and print profile information to sys.stderr.
+if hotshot is not None:
 
-        This function is registered as an atexit hook.
-        """
-        self.profiler.close()
-        funcname = self.fn.__name__
-        filename = self.fn.func_code.co_filename
-        lineno = self.fn.func_code.co_firstlineno
-        print
-        print "*** PROFILER RESULTS ***"
-        print "%s (%s:%s)" % (funcname, filename, lineno)
-        print "function called %d times" % self.ncalls,
-        if self.skipped:
-            print "(%d calls not profiled)" % self.skipped
-        else:
+    class HotShotFuncProfile(object):
+        """Profiler for a function (uses hotshot)."""
+
+        # This flag is shared between all instances
+        in_profiler = False
+
+        def __init__(self, fn, skip=0, filename=None):
+            """Creates a profiler for a function.
+
+            Every profiler has its own log file (the name of which is derived
+            from the function name).
+
+            HotShotFuncProfile registers an atexit handler that prints
+            profiling information to sys.stderr when the program terminates.
+
+            The log file is not removed and remains there to clutter the
+            current working directory.
+            """
+            self.fn = fn
+            self.filename = filename
+            if self.filename:
+                self.logfilename = filename + ".raw"
+            else:
+                self.logfilename = fn.__name__ + ".prof"
+            self.profiler = hotshot.Profile(self.logfilename)
+            self.ncalls = 0
+            self.skip = skip
+            self.skipped = 0
+            atexit.register(self.atexit)
+
+        def __call__(self, *args, **kw):
+            """Profile a singe call to the function."""
+            self.ncalls += 1
+            if self.skip > 0:
+                self.skip -= 1
+                self.skipped += 1
+                return self.fn(*args, **kw)
+            if HotShotFuncProfile.in_profiler:
+                # handle recursive calls
+                return self.fn(*args, **kw)
+            try:
+                HotShotFuncProfile.in_profiler = True
+                return self.profiler.runcall(self.fn, *args, **kw)
+            finally:
+                HotShotFuncProfile.in_profiler = False
+
+        def atexit(self):
+            """Stop profiling and print profile information to sys.stderr.
+
+            This function is registered as an atexit hook.
+            """
+            self.profiler.close()
+            funcname = self.fn.__name__
+            filename = self.fn.func_code.co_filename
+            lineno = self.fn.func_code.co_firstlineno
             print
-        print
-        stats = hotshot.stats.load(self.logfilename)
-        # hotshot.stats.load takes ages, and the .prof file eats megabytes, but
-        # a saved stats object is small and fast
-        if self.filename:
-            stats.dump_stats(self.filename)
-        # it is best to save before strip_dirs
-        stats.strip_dirs()
-        stats.sort_stats('cumulative', 'time', 'calls')
-        stats.print_stats(40)
+            print "*** PROFILER RESULTS ***"
+            print "%s (%s:%s)" % (funcname, filename, lineno)
+            print "function called %d times" % self.ncalls,
+            if self.skipped:
+                print "(%d calls not profiled)" % self.skipped
+            else:
+                print
+            print
+            stats = hotshot.stats.load(self.logfilename)
+            # hotshot.stats.load takes ages, and the .prof file eats megabytes, but
+            # a saved stats object is small and fast
+            if self.filename:
+                stats.dump_stats(self.filename)
+            # it is best to save before strip_dirs
+            stats.strip_dirs()
+            stats.sort_stats('cumulative', 'time', 'calls')
+            stats.print_stats(40)
+
+    AVAILABLE_PROFILERS['hotshot'] = HotShotFuncProfile
 
 
-class HotShotFuncCoverage:
-    """Coverage analysis for a function (uses _hotshot).
+    class HotShotFuncCoverage:
+        """Coverage analysis for a function (uses _hotshot).
 
-    HotShot coverage is reportedly faster than trace.py, but it appears to
-    have problems with exceptions; also line counts in coverage reports
-    are generally lower from line counts produced by TraceFuncCoverage.
-    Is this my bug, or is it a problem with _hotshot?
-    """
-
-    def __init__(self, fn):
-        """Creates a profiler for a function.
-
-        Every profiler has its own log file (the name of which is derived
-        from the function name).
-
-        HotShotFuncCoverage registers an atexit handler that prints
-        profiling information to sys.stderr when the program terminates.
-
-        The log file is not removed and remains there to clutter the
-        current working directory.
+        HotShot coverage is reportedly faster than trace.py, but it appears to
+        have problems with exceptions; also line counts in coverage reports
+        are generally lower from line counts produced by TraceFuncCoverage.
+        Is this my bug, or is it a problem with _hotshot?
         """
-        self.fn = fn
-        self.logfilename = fn.__name__ + ".cprof"
-        self.profiler = _hotshot.coverage(self.logfilename)
-        self.ncalls = 0
-        atexit.register(self.atexit)
 
-    def __call__(self, *args, **kw):
-        """Profile a singe call to the function."""
-        self.ncalls += 1
-        return self.profiler.runcall(self.fn, args, kw)
+        def __init__(self, fn):
+            """Creates a profiler for a function.
 
-    def atexit(self):
-        """Stop profiling and print profile information to sys.stderr.
+            Every profiler has its own log file (the name of which is derived
+            from the function name).
 
-        This function is registered as an atexit hook.
-        """
-        self.profiler.close()
-        funcname = self.fn.__name__
-        filename = self.fn.func_code.co_filename
-        lineno = self.fn.func_code.co_firstlineno
-        print
-        print "*** COVERAGE RESULTS ***"
-        print "%s (%s:%s)" % (funcname, filename, lineno)
-        print "function called %d times" % self.ncalls
-        print
-        fs = FuncSource(self.fn)
-        reader = hotshot.log.LogReader(self.logfilename)
-        for what, (filename, lineno, funcname), tdelta in reader:
-            if filename != fs.filename:
-                continue
-            if what == hotshot.log.LINE:
-                fs.mark(lineno)
-            if what == hotshot.log.ENTER:
-                # hotshot gives us the line number of the function definition
-                # and never gives us a LINE event for the first statement in
-                # a function, so if we didn't perform this mapping, the first
-                # statement would be marked as never executed
-                if lineno == fs.firstlineno:
-                    lineno = fs.firstcodelineno
-                fs.mark(lineno)
-        reader.close()
-        print fs
+            HotShotFuncCoverage registers an atexit handler that prints
+            profiling information to sys.stderr when the program terminates.
+
+            The log file is not removed and remains there to clutter the
+            current working directory.
+            """
+            self.fn = fn
+            self.logfilename = fn.__name__ + ".cprof"
+            self.profiler = _hotshot.coverage(self.logfilename)
+            self.ncalls = 0
+            atexit.register(self.atexit)
+
+        def __call__(self, *args, **kw):
+            """Profile a singe call to the function."""
+            self.ncalls += 1
+            return self.profiler.runcall(self.fn, args, kw)
+
+        def atexit(self):
+            """Stop profiling and print profile information to sys.stderr.
+
+            This function is registered as an atexit hook.
+            """
+            self.profiler.close()
+            funcname = self.fn.__name__
+            filename = self.fn.func_code.co_filename
+            lineno = self.fn.func_code.co_firstlineno
+            print
+            print "*** COVERAGE RESULTS ***"
+            print "%s (%s:%s)" % (funcname, filename, lineno)
+            print "function called %d times" % self.ncalls
+            print
+            fs = FuncSource(self.fn)
+            reader = hotshot.log.LogReader(self.logfilename)
+            for what, (filename, lineno, funcname), tdelta in reader:
+                if filename != fs.filename:
+                    continue
+                if what == hotshot.log.LINE:
+                    fs.mark(lineno)
+                if what == hotshot.log.ENTER:
+                    # hotshot gives us the line number of the function definition
+                    # and never gives us a LINE event for the first statement in
+                    # a function, so if we didn't perform this mapping, the first
+                    # statement would be marked as never executed
+                    if lineno == fs.firstlineno:
+                        lineno = fs.firstcodelineno
+                    fs.mark(lineno)
+            reader.close()
+            print fs
 
 
 class TraceFuncCoverage:

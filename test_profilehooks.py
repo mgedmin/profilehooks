@@ -1,5 +1,8 @@
+#!/usr/bin/env python
 """
 Tests for profilehooks.py
+
+They are woefully incomplete.
 
 Run it with python setup.py test
 """
@@ -11,6 +14,39 @@ import StringIO
 import atexit
 
 import profilehooks
+
+
+def doctest_profile():
+    """Test for profile.
+
+        >>> @profilehooks.profile
+        ... def sample_fn(x, y, z):
+        ...     print x, y, z
+        ...     return x + y * z
+
+    You can call that function normally
+
+        >>> r = sample_fn(1, 2, z=3)
+        1 2 3
+        >>> r
+        7
+
+    and do that more than once
+
+        >>> sample_fn(3, 2, 1)
+        3 2 1
+        5
+
+    When you exit, the profile is printed to stdout
+
+        >>> sys.exitfunc()
+        <BLANKLINE>
+        *** PROFILER RESULTS ***
+        sample_fn (<doctest test_profilehooks.doctest_profile[0]>:1)
+        function called 2 times
+        ...
+
+    """
 
 
 def doctest_timecall():
@@ -131,9 +167,13 @@ def tearDown(test):
 
 
 def additional_tests():
-    return doctest.DocTestSuite(setUp=setUp, tearDown=tearDown)
+    optionflags = (doctest.REPORT_ONLY_FIRST_FAILURE |
+                   doctest.ELLIPSIS)
+    return doctest.DocTestSuite(setUp=setUp, tearDown=tearDown,
+                                optionflags=optionflags)
 
 
 if __name__ == '__main__':
-    unittest.main(testSuite='additional_tests')
+    # a bit pointless: __name__ is different and thus all tests will fail
+    unittest.main(defaultTest='additional_tests')
 
