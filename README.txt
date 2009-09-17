@@ -18,11 +18,11 @@ of profiling, use ::
 
     from profilehooks import timecall
 
-    @timecall
+    @timecall       # or @timecall(immediate=True)
     def my_function(args, etc):
         pass
 
-Finally, you may be interested in seeing coverage for a single function ::
+Finally, you may be interested in seeing line coverage for a single function ::
 
     from profilehooks import coverage
 
