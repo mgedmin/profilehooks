@@ -653,7 +653,7 @@ class FuncSource:
         return ''.join(lines)
 
 
-def timecall(fn=None, immediate=True):
+def timecall(fn=None, immediate=True, timer=time.time):
     """Wrap `fn` and print its execution time.
 
     Example::
@@ -669,13 +669,18 @@ def timecall(fn=None, immediate=True):
 
         @timecall(immediate=False)
 
+    You can also choose a timing method other than the default ``time.time()``,
+    e.g.:
+
+        @timecall(timer=time.clock)
+
     """
     if fn is None: # @timecall() syntax -- we are a decorator maker
         def decorator(fn):
-            return timecall(fn, immediate=immediate)
+            return timecall(fn, immediate=immediate, timer=timer)
         return decorator
     # @timecall syntax -- we are a decorator.
-    fp = FuncTimer(fn, immediate=immediate)
+    fp = FuncTimer(fn, immediate=immediate, timer=timer)
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
     def new_fn(*args, **kw):
@@ -689,23 +694,25 @@ def timecall(fn=None, immediate=True):
 
 class FuncTimer(object):
 
-    def __init__(self, fn, immediate):
+    def __init__(self, fn, immediate, timer):
         self.fn = fn
         self.ncalls = 0
         self.totaltime = 0
         self.immediate = immediate
+        self.timer = timer
         if not immediate:
             atexit.register(self.atexit)
 
     def __call__(self, *args, **kw):
         """Profile a singe call to the function."""
         fn = self.fn
+        timer = self.timer
         self.ncalls += 1
         try:
-            start = time.time()
+            start = timer()
             return fn(*args, **kw)
         finally:
-            duration = time.time() - start
+            duration = timer() - start
             self.totaltime += duration
             if self.immediate:
                 funcname = fn.__name__

@@ -7,7 +7,7 @@ long_description = open(os.path.join(here, 'README.txt')).read()
 
 setup(
     name='profilehooks',
-    version='1.4',
+    version='1.5',
     author='Marius Gedminas',
     author_email='marius@gedmin.as',
     url='http://mg.pov.lt/profilehooks/',
