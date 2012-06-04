@@ -1,3 +1,6 @@
 include *.txt
-include tox.ini
+include .gitignore
 include MANIFEST.in
+include Makefile
+include test*.py
+include tox.ini
