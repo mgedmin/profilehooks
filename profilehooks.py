@@ -92,8 +92,8 @@ Released under the MIT licence since December 2006:
 __author__ = "Marius Gedminas (marius@gedmin.as)"
 __copyright__ = "Copyright 2004-2012 Marius Gedminas"
 __license__ = "MIT"
-__version__ = "1.6"
-__date__ = "2012-05-05"
+__version__ = "1.7pre"
+__date__ = "2012-06-05"
 
 
 import atexit

@@ -9,7 +9,7 @@ long_description = readme + '\n\n' + changelog
 
 setup(
     name='profilehooks',
-    version='1.6',
+    version='1.7pre',
     author='Marius Gedminas',
     author_email='marius@gedmin.as',
     url='http://mg.pov.lt/profilehooks/',
