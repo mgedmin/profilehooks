@@ -87,5 +87,5 @@ release: releasechecklist
 	@echo "Please increment the version number in $(FILE_WITH_VERSION)"
 	@echo "and add a new empty entry at the top of the changelog in $(FILE_WITH_CHANGELOG), then"
 	@echo
-	@echo '  git commit -a -m "Post-release version bump" && git push --tags'
+	@echo '  git commit -a -m "Post-release version bump" && git push && git push --tags'
 	@echo
