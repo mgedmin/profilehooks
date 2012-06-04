@@ -3,7 +3,9 @@ import os
 from setuptools import setup
 
 here = os.path.dirname(__file__)
-long_description = open(os.path.join(here, 'README.txt')).read()
+readme = open(os.path.join(here, 'README.txt')).read()
+changelog = open(os.path.join(here, 'CHANGES.txt')).read()
+long_description = readme + '\n\n' + changelog
 
 setup(
     name='profilehooks',
@@ -11,7 +13,7 @@ setup(
     author='Marius Gedminas',
     author_email='marius@gedmin.as',
     url='http://mg.pov.lt/profilehooks/',
-    description='Decorators for profiling individual functions',
+    description='Decorators for profiling/timing/tracing individual functions',
     long_description=long_description,
     classifiers = [
         'Development Status :: 5 - Production/Stable',

@@ -1,0 +1,9 @@
+Changelog
+=========
+
+1.6
+---
+
+- Added Python 3.2 compatibility, dropped Python 2.3, 2.4 and 2.5 compatibility.
+
+- Migrated the source repository to https://github.com/mgedmin/profilehooks
