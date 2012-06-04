@@ -1,0 +1,3 @@
+include *.txt
+include tox.ini
+include MANIFEST.in
