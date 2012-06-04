@@ -1,5 +1,6 @@
 PYTHON = python
-FILE_WITH_VERSION = profilehooks.py
+FILE_WITH_METADATA = profilehooks.py
+FILE_WITH_VERSION = setup.py
 FILE_WITH_CHANGELOG = CHANGES.txt
 
 .PHONY: default
@@ -62,6 +63,12 @@ distcheck:
 
 .PHONY: releasechecklist
 releasechecklist:
+	@ver_line='__version__ = "'`$(PYTHON) setup.py --version`'"' && \
+	    grep -q "^$$ver_line$$" $(FILE_WITH_METADATA) || { \
+	        echo "$(FILE_WITH_METADATA) doesn't specify $$ver_line"; exit 1; }
+	@date_line='__date__ = "'`date +%Y-%m-%d`'"' && \
+	    grep -q "^$$date_line$$" $(FILE_WITH_METADATA) || { \
+	        echo "$(FILE_WITH_METADATA) doesn't specify $$date_line"; exit 1; }
 	@$(PYTHON) setup.py --version | grep -qv dev || { \
 	    echo "Please remove the 'dev' suffix from the version number in $(FILE_WITH_VERSION)"; exit 1; }
 	@$(PYTHON) setup.py --long-description | rst2html --exit-status=2 > /dev/null
