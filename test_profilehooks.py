@@ -10,10 +10,20 @@ Run it with python setup.py test
 import sys
 import doctest
 import unittest
-import StringIO
 import atexit
 
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
+
 import profilehooks
+
+
+if hasattr(atexit, '_run_exitfuncs'):
+    run_exitfuncs = atexit._run_exitfuncs
+else:
+    run_exitfuncs = sys.exitfunc
 
 
 def doctest_profile():
@@ -21,7 +31,7 @@ def doctest_profile():
 
         >>> @profilehooks.profile
         ... def sample_fn(x, y, z):
-        ...     print x, y, z
+        ...     print("%s %s %s" % (x, y, z))
         ...     return x + y * z
 
     You can call that function normally
@@ -39,7 +49,7 @@ def doctest_profile():
 
     When you exit, the profile is printed to stdout
 
-        >>> sys.exitfunc()
+        >>> run_exitfuncs()
         <BLANKLINE>
         *** PROFILER RESULTS ***
         sample_fn (<doctest test_profilehooks.doctest_profile[0]>:1)
@@ -54,7 +64,7 @@ def doctest_timecall():
 
         >>> @profilehooks.timecall
         ... def sample_fn(x, y, z):
-        ...     print x, y, z
+        ...     print("%s %s %s" % (x, y, z))
         ...     return x + y * z
 
     You can call that function normally
@@ -66,16 +76,17 @@ def doctest_timecall():
 
     Every call also prints to stderr
 
-        >>> print sys.stderr.getvalue(),
+        >>> print(sys.stderr.getvalue())
         <BLANKLINE>
           sample_fn (<doctest test_profilehooks.doctest_timecall[0]>:1):
             0.000 seconds
+        <BLANKLINE>
         <BLANKLINE>
 
         >>> r = sample_fn(3, 2, 1)
         3 2 1
 
-        >>> print sys.stderr.getvalue(),
+        >>> print(sys.stderr.getvalue())
         <BLANKLINE>
           sample_fn (<doctest test_profilehooks.doctest_timecall[0]>:1):
             0.000 seconds
@@ -83,6 +94,7 @@ def doctest_timecall():
         <BLANKLINE>
           sample_fn (<doctest test_profilehooks.doctest_timecall[0]>:1):
             0.000 seconds
+        <BLANKLINE>
         <BLANKLINE>
 
     """
@@ -93,7 +105,7 @@ def doctest_timecall_not_immediate():
 
         >>> @profilehooks.timecall(immediate=False)
         ... def sample_fn(x, y, z):
-        ...     print x, y, z
+        ...     print('%s %s %s' % (x, y, z))
         ...     return x + y * z
 
     You can call that function normally
@@ -105,16 +117,18 @@ def doctest_timecall_not_immediate():
 
     This time nothing is printed to stderr
 
-        >>> print sys.stderr.getvalue(),
+        >>> print(sys.stderr.getvalue())
+        <BLANKLINE>
 
         >>> r = sample_fn(3, 2, 1)
         3 2 1
 
-        >>> print sys.stderr.getvalue(),
+        >>> print(sys.stderr.getvalue())
+        <BLANKLINE>
 
     until the application exits:
 
-        >>> sys.exitfunc()
+        >>> run_exitfuncs()
         <BLANKLINE>
           sample_fn (<doctest test_profilehooks.doctest_timecall_not_immediate[0]>:1):
             2 calls, 0.000 seconds (0.000 seconds per call)
@@ -136,7 +150,7 @@ def doctest_dump():
         >>> @profilehooks.profile(filename=tf[1])
         ... def f():
         ...     pass
-        >>> sys.exitfunc() # doctest:+ELLIPSIS
+        >>> run_exitfuncs() # doctest:+ELLIPSIS
         <BLANKLINE>
         ...
         <BLANKLINE>
@@ -145,7 +159,7 @@ def doctest_dump():
 
         >>> import pstats
         >>> pstats.Stats(tf[1]) # doctest:+ELLIPSIS
-        <pstats.Stats instance at ...>
+        <pstats.Stats...>
 
     Remove the temporary file again
 
@@ -157,13 +171,16 @@ def doctest_dump():
 
 def setUp(test):
     test.real_stderr = sys.stderr
-    stderr_wrapper = StringIO.StringIO()
+    stderr_wrapper = StringIO()
     sys.stderr = stderr_wrapper
 
 
 def tearDown(test):
     sys.stderr = test.real_stderr
-    del atexit._exithandlers[:]
+    if hasattr(atexit, '_clear'):
+        atexit._clear()
+    else:
+        del atexit._exithandlers[:]
 
 
 def additional_tests():
@@ -175,5 +192,7 @@ def additional_tests():
 
 if __name__ == '__main__':
     # a bit pointless: __name__ is different and thus all tests will fail
+    __name__ = 'test_profilehooks'
+    sys.modules[__name__] = sys.modules['__main__']
     unittest.main(defaultTest='additional_tests')
 
