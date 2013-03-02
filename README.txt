@@ -30,6 +30,14 @@ Finally, you may be interested in seeing line coverage for a single function ::
     def my_function(args, etc):
         pass
 
+Also functions can be available in Python console or module if run it with -m arg
+
+     $ python -m profilehooks
+     >>> profile
+     <function profile at 0x1005c6488>
+
+     $ python -m profilehooks yourmodule
+
 Full documentation is available through ``pydoc profilehooks`` after
 installation.
 
