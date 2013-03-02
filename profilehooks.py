@@ -18,6 +18,18 @@ Usage example (Python 2.4 or newer)::
 
     print(fn(42))
 
+Or without imports, with some hack
+
+    $ python -m profilehooks yourmodule
+
+    @profile    # or @coverage
+    def fn(n):
+        if n < 2: return 1
+        else: return n * fn(n-1)
+
+    print(fn(42))
+
+
 Usage example (Python 2.3 or older)::
 
     from profilehooks import profile, coverage
@@ -133,6 +145,8 @@ import time
 # registry of available profilers
 AVAILABLE_PROFILERS = {}
 
+__all__ = ['coverage', 'coverage_with_hotshot', 'profile', 'timecall']
+
 
 def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
             sort=None, entries=40,
@@ -191,7 +205,7 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
             ...
 
     """
-    if fn is None: # @profile() syntax -- we are a decorator maker
+    if fn is None:  # @profile() syntax -- we are a decorator maker
         def decorator(fn):
             return profile(fn, skip=skip, filename=filename,
                            immediate=immediate, dirs=dirs,
@@ -215,6 +229,7 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
          # or HotShotFuncProfile
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
+
     def new_fn(*args, **kw):
         return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
@@ -243,9 +258,10 @@ def coverage(fn):
             ...
 
     """
-    fp = TraceFuncCoverage(fn) # or HotShotFuncCoverage
+    fp = TraceFuncCoverage(fn)  # or HotShotFuncCoverage
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
+
     def new_fn(*args, **kw):
         return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
@@ -267,6 +283,7 @@ def coverage_with_hotshot(fn):
     fp = HotShotFuncCoverage(fn)
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
+
     def new_fn(*args, **kw):
         return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
@@ -457,7 +474,6 @@ if hotshot is not None:
             stats.print_stats(40)
 
     AVAILABLE_PROFILERS['hotshot'] = HotShotFuncProfile
-
 
     class HotShotFuncCoverage:
         """Coverage analysis for a function (uses _hotshot).
@@ -674,7 +690,7 @@ def timecall(fn=None, immediate=True, timer=time.time):
         @timecall(timer=time.clock)
 
     """
-    if fn is None: # @timecall() syntax -- we are a decorator maker
+    if fn is None:  # @timecall() syntax -- we are a decorator maker
         def decorator(fn):
             return timecall(fn, immediate=immediate, timer=timer)
         return decorator
@@ -682,6 +698,7 @@ def timecall(fn=None, immediate=True, timer=time.time):
     fp = FuncTimer(fn, immediate=immediate, timer=timer)
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
+
     def new_fn(*args, **kw):
         return fp(*args, **kw)
     new_fn.__doc__ = fn.__doc__
@@ -718,7 +735,8 @@ class FuncTimer(object):
                 filename = fn.__code__.co_filename
                 lineno = fn.__code__.co_firstlineno
                 sys.stderr.write("\n  %s (%s:%s):\n    %.3f seconds\n\n" % (
-                                        funcname, filename, lineno, duration))
+                    funcname, filename, lineno, duration
+                ))
                 sys.stderr.flush()
 
     def atexit(self):
@@ -729,6 +747,30 @@ class FuncTimer(object):
         lineno = self.fn.__code__.co_firstlineno
         print("\n  %s (%s:%s):\n"
               "    %d calls, %.3f seconds (%.3f seconds per call)\n" % (
-                               funcname, filename, lineno, self.ncalls,
-                               self.totaltime, self.totaltime / self.ncalls))
+                  funcname, filename, lineno, self.ncalls,
+                  self.totaltime, self.totaltime / self.ncalls)
+              )
 
+if __name__ == '__main__':
+
+    local = {name: globals()[name] for name in __all__}
+    message = """********
+Injected `profilehooks`
+--------
+{}
+********
+""".format("\n".join(local.keys()))
+
+    def interact_():
+        from code import interact
+        interact(message, local=local)
+
+    def run_():
+        from runpy import run_module
+        print(message)
+        run_module(sys.argv[1], init_globals=local)
+
+    if len(sys.argv) == 1:
+        interact_()
+    else:
+        run_()
