@@ -1,8 +1,13 @@
 Changelog
 =========
 
-1.7 (unreleased)
+1.7 (2013-10-16)
 ----------------
+
+- Explicitly claim Python 3.3 compatibility.
+
+- Fix Python 3.x bug with @coverage (stop using sys.maxint):
+  https://github.com/mgedmin/profilehooks/issues/2.
 
 
 1.6 (2012-06-05)

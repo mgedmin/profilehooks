@@ -1,7 +1,7 @@
 PYTHON = python
 FILE_WITH_METADATA = profilehooks.py
 FILE_WITH_VERSION = setup.py
-FILE_WITH_CHANGELOG = CHANGES.txt
+FILE_WITH_CHANGELOG = CHANGES.rst
 
 .PHONY: default
 default:

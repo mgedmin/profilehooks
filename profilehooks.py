@@ -102,10 +102,10 @@ Released under the MIT licence since December 2006:
 """
 
 __author__ = "Marius Gedminas (marius@gedmin.as)"
-__copyright__ = "Copyright 2004-2012 Marius Gedminas"
+__copyright__ = "Copyright 2004-2013 Marius Gedminas"
 __license__ = "MIT"
-__version__ = "1.7pre"
-__date__ = "2012-06-05"
+__version__ = "1.7"
+__date__ = "2013-10-16"
 
 
 import atexit

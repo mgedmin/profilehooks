@@ -13,7 +13,7 @@ def read(filename):
 
 setup(
     name='profilehooks',
-    version='1.7pre',
+    version='1.7',
     author='Marius Gedminas',
     author_email='marius@gedmin.as',
     url='http://mg.pov.lt/profilehooks/',
