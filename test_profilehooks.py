@@ -11,6 +11,8 @@ import sys
 import doctest
 import unittest
 import atexit
+import textwrap
+import difflib
 
 try:
     from cStringIO import StringIO
@@ -24,6 +26,56 @@ if hasattr(atexit, '_run_exitfuncs'):
     run_exitfuncs = atexit._run_exitfuncs
 else:
     run_exitfuncs = sys.exitfunc
+
+
+class TestCase(unittest.TestCase):
+
+    maxDiff = None
+
+    def setUp(self):
+        self.real_stderr = sys.stderr
+        self.real_stdout = sys.stdout
+        sys.stderr = StringIO()
+        sys.stdout = StringIO()
+
+    def tearDown(self):
+        sys.stderr = self.real_stderr
+        sys.stdout = self.real_stdout
+
+
+class TestCoverage(TestCase):
+
+    @profilehooks.coverage
+    def sample_fn(self, x, y, z):
+        if x == y == z:
+            return "%s" % (x, )
+        elif x == y:
+            return "%s %s" % (x, z)
+        else:
+            return "%s %s %s" % (x, y, z)
+
+    def test_coverage(self):
+        self.sample_fn(1, 1, 1)
+        self.sample_fn(1, 2, 3)
+        run_exitfuncs()
+        self.assertEqual(
+            sys.stdout.getvalue(),
+            '\n' + textwrap.dedent("""\
+            *** COVERAGE RESULTS ***
+            sample_fn (test_profilehooks.py:48)
+            function called 2 times
+
+                       @profilehooks.coverage
+                       def sample_fn(self, x, y, z):
+                2:         if x == y == z:
+                1:             return "%s" % (x, )
+                1:         elif x == y:
+            >>>>>>             return "%s %s" % (x, z)
+                           else:
+                1:             return "%s %s %s" % (x, y, z)
+
+            1 lines were not executed.
+            """))
 
 
 def doctest_profile():
@@ -186,8 +238,11 @@ def tearDown(test):
 def additional_tests():
     optionflags = (doctest.REPORT_ONLY_FIRST_FAILURE |
                    doctest.ELLIPSIS)
-    return doctest.DocTestSuite(setUp=setUp, tearDown=tearDown,
-                                optionflags=optionflags)
+    return unittest.TestSuite([
+        unittest.makeSuite(TestCoverage),
+        doctest.DocTestSuite(setUp=setUp, tearDown=tearDown,
+                                optionflags=optionflags),
+    ])
 
 
 if __name__ == '__main__':
