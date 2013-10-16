@@ -1,6 +1,9 @@
 profilehooks
 ============
 
+.. image:: https://travis-ci.org/mgedmin/profilehooks.png?branch=master
+   :target: https://travis-ci.org/mgedmin/profilehooks
+
 It's a collection of decorators for profiling functions.  E.g. to profile a
 single function::
 
