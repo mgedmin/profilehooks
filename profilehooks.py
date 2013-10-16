@@ -753,7 +753,7 @@ class FuncTimer(object):
 
 if __name__ == '__main__':
 
-    local = {name: globals()[name] for name in __all__}
+    local = dict((name, globals()[name]) for name in __all__)
     message = """********
 Injected `profilehooks`
 --------
