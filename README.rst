@@ -33,7 +33,7 @@ Finally, you may be interested in seeing line coverage for a single function ::
     def my_function(args, etc):
         pass
 
-Also functions can be available in Python console or module if run it with -m arg
+Also functions can be available in Python console or module if run it with -m arg ::
 
      $ python -m profilehooks
      >>> profile
