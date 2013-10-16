@@ -614,13 +614,20 @@ class FuncSource:
     def __init__(self, fn):
         self.fn = fn
         self.filename = inspect.getsourcefile(fn)
-        self.source, self.firstlineno = inspect.getsourcelines(fn)
         self.sourcelines = {}
-        self.firstcodelineno = self.firstlineno
-        self.find_source_lines()
+        self.source = []
+        self.firstlineno = self.firstcodelineno = 0
+        try:
+            self.source, self.firstlineno = inspect.getsourcelines(fn)
+            self.firstcodelineno = self.firstlineno
+            self.find_source_lines()
+        except IOError:
+            self.filename = None
 
     def find_source_lines(self):
         """Mark all executable source lines in fn as executed 0 times."""
+        if self.filename is None:
+            return
         strs = trace.find_strings(self.filename)
         lines = trace.find_lines_from_code(self.fn.__code__, strs)
         for lineno in lines:
@@ -650,6 +657,8 @@ class FuncSource:
 
     def __str__(self):
         """Return annotated source code for the function."""
+        if self.filename is None:
+            return "cannot show coverage data since co_filename is None"
         lines = []
         lineno = self.firstlineno
         for line in self.source:

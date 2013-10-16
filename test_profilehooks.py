@@ -78,6 +78,35 @@ class TestCoverage(TestCase):
             """))
 
 
+def doctest_coverage_when_source_is_not_available(self):
+    """Test for coverage.
+
+        >>> @profilehooks.coverage
+        ... def sample_fn(x, y, z):
+        ...     if x == y == z:
+        ...         print("%s" % (x, ))
+        ...     elif x == y:
+        ...         print("%s %s" % (x, z))
+        ...     else:
+        ...         print("%s %s %s" % (x, y, z))
+
+        >>> sample_fn(1, 1, 1)
+        1
+        >>> sample_fn(1, 2, 3)
+        1 2 3
+
+
+        >>> run_exitfuncs()
+        <BLANKLINE>
+        *** COVERAGE RESULTS ***
+        sample_fn (<doctest test_profilehooks.doctest_coverage_when_source_is_not_available[0]>:1)
+        function called 2 times
+        <BLANKLINE>
+        cannot show coverage data since co_filename is None
+
+    """
+
+
 def doctest_profile():
     """Test for profile.
 
