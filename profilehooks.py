@@ -623,11 +623,11 @@ class FuncSource:
         """Mark all executable source lines in fn as executed 0 times."""
         strs = trace.find_strings(self.filename)
         lines = trace.find_lines_from_code(self.fn.__code__, strs)
-        self.firstcodelineno = sys.maxint
         for lineno in lines:
-            self.firstcodelineno = min(self.firstcodelineno, lineno)
             self.sourcelines.setdefault(lineno, 0)
-        if self.firstcodelineno == sys.maxint:
+        if lines:
+            self.firstcodelineno = min(lines)
+        else:
             self.firstcodelineno = self.firstlineno
 
     def mark(self, lineno, count=1):
