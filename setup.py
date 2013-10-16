@@ -18,7 +18,7 @@ setup(
     author_email='marius@gedmin.as',
     url='http://mg.pov.lt/profilehooks/',
     description='Decorators for profiling/timing/tracing individual functions',
-    long_description=read('README.txt') + '\n\n' + read('CHANGES.txt'),
+    long_description=read('README.rst') + '\n\n' + read('CHANGES.rst'),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
