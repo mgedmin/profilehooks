@@ -12,7 +12,6 @@ import doctest
 import unittest
 import atexit
 import textwrap
-import difflib
 
 try:
     from cStringIO import StringIO
@@ -22,10 +21,16 @@ except ImportError:
 import profilehooks
 
 
-if hasattr(atexit, '_run_exitfuncs'):
-    run_exitfuncs = atexit._run_exitfuncs
-else:
-    run_exitfuncs = sys.exitfunc
+_exitfuncs = []
+
+
+def _register_exitfunc(func, *args, **kw):
+    _exitfuncs.append((func, args, kw))
+
+
+def run_exitfuncs():
+    for fn, args, kw in _exitfuncs:
+        fn(*args, **kw)
 
 
 class TestCase(unittest.TestCase):
@@ -35,17 +40,28 @@ class TestCase(unittest.TestCase):
     def setUp(self):
         self.real_stderr = sys.stderr
         self.real_stdout = sys.stdout
+        self.real_register = atexit.register
         sys.stderr = StringIO()
         sys.stdout = StringIO()
+        atexit.register = _register_exitfunc
+        del _exitfuncs[:]
 
     def tearDown(self):
         sys.stderr = self.real_stderr
         sys.stdout = self.real_stdout
+        atexit.register = self.real_register
+        del _exitfuncs[:]
 
 
 class TestCoverage(TestCase):
 
-    @profilehooks.coverage
+    # This is a unit test and not a doctest because inspect.getsource()
+    # gets confused about functions defined in doctests.
+    #
+    # The downside of using a unit test is cumbersome checking of
+    # stdout-printed text, and the inability of using the decorators
+    # directly in the source, because we haven't stubbed atexit.register yet.
+
     def sample_fn(self, x, y, z):
         if x == y == z:
             return "%s" % (x, )
@@ -53,6 +69,10 @@ class TestCoverage(TestCase):
             return "%s %s" % (x, z)
         else:
             return "%s %s %s" % (x, y, z)
+
+    def setUp(self):
+        super(TestCoverage, self).setUp()
+        self.sample_fn = profilehooks.coverage(self.sample_fn)
 
     def test_coverage(self):
         self.sample_fn(1, 1, 1)
@@ -62,10 +82,9 @@ class TestCoverage(TestCase):
             sys.stdout.getvalue(),
             '\n' + textwrap.dedent("""\
             *** COVERAGE RESULTS ***
-            sample_fn (test_profilehooks.py:48)
+            sample_fn (test_profilehooks.py:65)
             function called 2 times
 
-                       @profilehooks.coverage
                        def sample_fn(self, x, y, z):
                 2:         if x == y == z:
                 1:             return "%s" % (x, )
@@ -252,16 +271,17 @@ def doctest_dump():
 
 def setUp(test):
     test.real_stderr = sys.stderr
+    test.real_register = atexit.register
     stderr_wrapper = StringIO()
     sys.stderr = stderr_wrapper
+    atexit.register = _register_exitfunc
+    del _exitfuncs[:]
 
 
 def tearDown(test):
     sys.stderr = test.real_stderr
-    if hasattr(atexit, '_clear'):
-        atexit._clear()
-    else:
-        del atexit._exithandlers[:]
+    atexit.register = test.real_register
+    del _exitfuncs[:]
 
 
 def additional_tests():
