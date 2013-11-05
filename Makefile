@@ -11,6 +11,11 @@ default:
 test check:
 	$(PYTHON) test_profilehooks.py
 
+.PHONY: coverage
+coverage:
+	coverage run test_profilehooks.py
+	coverage report
+
 .PHONY: test-all-pythons
 test-all-pythons:
 	# poor man's tox -- why not use the real thing instead?

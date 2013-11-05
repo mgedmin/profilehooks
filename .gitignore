@@ -4,3 +4,4 @@ dist
 tmp
 *.py[co]
 __pycache__/
+.coverage
