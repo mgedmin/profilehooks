@@ -264,6 +264,7 @@ def doctest_dump():
     Remove the temporary file again
 
         >>> import os
+        >>> os.close(tf[0])
         >>> os.remove(tf[1])
 
     """
