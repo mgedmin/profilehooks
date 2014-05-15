@@ -756,9 +756,9 @@ class FuncTimer(object):
                 filename = fn.__code__.co_filename
                 lineno = fn.__code__.co_firstlineno
                 if self.stats is not None:
-                    lq,uq,m,std = self._calc_stats()
-                    perf = "%.3f seconds (%.3f +/- %.3f 10%%:%.3f 90%%:%.3f)" % (
-                           duration, m, std, lq, uq)
+                    lq,uq,m,std,_min,_max = self._calc_stats()
+                    perf = "%.3f seconds (%.3f +/- %.3f 0%%:%.3f 10%%:%.3f 90%%:%.3f 100%%:%.3f)" % (
+                           duration, m, std, _min, lq, uq, _max)
                 else:
                     perf = "%.3f seconds" % duration
                 sys.stderr.write("\n  %s (%s:%s):\n    %s\n\n" % (
@@ -772,7 +772,7 @@ class FuncTimer(object):
         uq = np.percentile(data, 90)
         m = np.mean(data)
         std = np.std(data)
-        return lq,uq,m,std
+        return lq,uq,m,std,np.min(data),np.max(data)
 
     def atexit(self):
         if not self.ncalls:
@@ -782,9 +782,9 @@ class FuncTimer(object):
         lineno = self.fn.__code__.co_firstlineno
         desc = "\n  %s (%s:%s):" % (funcname, filename, lineno)
         if self.stats is not None:
-            lq,uq,m,std = self._calc_stats()
-            perf = "    %d calls, %.3f seconds (%.3f +/- %.3f 10%%:%.3f 90%%:%.3f)" % (
-                   self.ncalls, self.totaltime, m, std, lq, uq)
+            lq,uq,m,std,_min,_max = self._calc_stats()
+            perf = "    %d calls, %.3f seconds (%.3f +/- %.3f 0%%:%.3f 10%%:%.3f 90%%:%.3f 100%%:%.3f)" % (
+                   self.ncalls, self.totaltime, m, std, _min, lq, uq, _max)
         else:
             perf = "    %d calls, %.3f seconds (%.3f seconds per call)" % (
                    self.ncalls, self.totaltime, self.totaltime / self.ncalls)
