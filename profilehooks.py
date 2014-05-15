@@ -140,7 +140,7 @@ except ImportError:
 
 # For timecall
 import time
-
+import numpy as np
 
 # registry of available profilers
 AVAILABLE_PROFILERS = {}
@@ -677,7 +677,7 @@ class FuncSource:
         return ''.join(lines)
 
 
-def timecall(fn=None, immediate=True, timer=time.time):
+def timecall(fn=None, immediate=True, timer=time.time, stats=0):
     """Wrap `fn` and print its execution time.
 
     Example::
@@ -698,13 +698,18 @@ def timecall(fn=None, immediate=True, timer=time.time):
 
         @timecall(timer=time.clock)
 
+    You can also collect statistics (mean,std,10th and 90th percentiles) for
+    the last N calls of the function by specifying stats=N, e.g.:
+
+        @timecall(stats=250)
+
     """
     if fn is None:  # @timecall() syntax -- we are a decorator maker
         def decorator(fn):
-            return timecall(fn, immediate=immediate, timer=timer)
+            return timecall(fn, immediate=immediate, timer=timer, stats=stats)
         return decorator
     # @timecall syntax -- we are a decorator.
-    fp = FuncTimer(fn, immediate=immediate, timer=timer)
+    fp = FuncTimer(fn, immediate=immediate, timer=timer, stats=stats)
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
 
@@ -719,12 +724,17 @@ def timecall(fn=None, immediate=True, timer=time.time):
 
 class FuncTimer(object):
 
-    def __init__(self, fn, immediate, timer):
+    def __init__(self, fn, immediate, timer, stats):
         self.fn = fn
         self.ncalls = 0
         self.totaltime = 0
         self.immediate = immediate
         self.timer = timer
+        if stats > 0:
+            self.stats = np.array([np.nan]*stats)
+        else:
+            self.stats = None
+
         if not immediate:
             atexit.register(self.atexit)
 
@@ -738,15 +748,31 @@ class FuncTimer(object):
             return fn(*args, **kw)
         finally:
             duration = timer() - start
+            if self.stats is not None:
+                self.stats[(self.ncalls -1 ) % len(self.stats)] = duration
             self.totaltime += duration
             if self.immediate:
                 funcname = fn.__name__
                 filename = fn.__code__.co_filename
                 lineno = fn.__code__.co_firstlineno
-                sys.stderr.write("\n  %s (%s:%s):\n    %.3f seconds\n\n" % (
-                    funcname, filename, lineno, duration
+                if self.stats is not None:
+                    lq,uq,m,std = self._calc_stats()
+                    perf = "%.3f seconds (%.3f +/- %.3f 10%%:%.3f 90%%:%.3f)" % (
+                           duration, m, std, lq, uq)
+                else:
+                    perf = "%.3f seconds" % duration
+                sys.stderr.write("\n  %s (%s:%s):\n    %s\n\n" % (
+                    funcname, filename, lineno, perf
                 ))
                 sys.stderr.flush()
+
+    def _calc_stats(self):
+        data = np.ma.array(self.stats, mask=np.isnan(self.stats)).compressed()
+        lq = np.percentile(data, 10)
+        uq = np.percentile(data, 90)
+        m = np.mean(data)
+        std = np.std(data)
+        return lq,uq,m,std
 
     def atexit(self):
         if not self.ncalls:
@@ -754,11 +780,16 @@ class FuncTimer(object):
         funcname = self.fn.__name__
         filename = self.fn.__code__.co_filename
         lineno = self.fn.__code__.co_firstlineno
-        print("\n  %s (%s:%s):\n"
-              "    %d calls, %.3f seconds (%.3f seconds per call)\n" % (
-                  funcname, filename, lineno, self.ncalls,
-                  self.totaltime, self.totaltime / self.ncalls)
-              )
+        desc = "\n  %s (%s:%s):" % (funcname, filename, lineno)
+        if self.stats is not None:
+            lq,uq,m,std = self._calc_stats()
+            perf = "    %d calls, %.3f seconds (%.3f +/- %.3f 10%%:%.3f 90%%:%.3f)" % (
+                   self.ncalls, self.totaltime, m, std, lq, uq)
+        else:
+            perf = "    %d calls, %.3f seconds (%.3f seconds per call)" % (
+                   self.ncalls, self.totaltime, self.totaltime / self.ncalls)
+
+        print("%s\n%s" % (desc, perf))
 
 if __name__ == '__main__':
 
