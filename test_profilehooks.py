@@ -77,12 +77,13 @@ class TestCoverage(TestCase):
     def test_coverage(self):
         self.sample_fn(1, 1, 1)
         self.sample_fn(1, 2, 3)
+        linenumber = self.__class__.sample_fn.__code__.co_firstlineno
         run_exitfuncs()
         self.assertEqual(
             sys.stdout.getvalue(),
             '\n' + textwrap.dedent("""\
             *** COVERAGE RESULTS ***
-            sample_fn (test_profilehooks.py:65)
+            sample_fn (test_profilehooks.py:{0})
             function called 2 times
 
                        def sample_fn(self, x, y, z):
@@ -94,7 +95,7 @@ class TestCoverage(TestCase):
                 1:             return "%s %s %s" % (x, y, z)
 
             1 lines were not executed.
-            """))
+            """.format(linenumber)))
 
 
 def doctest_coverage_when_source_is_not_available(self):
