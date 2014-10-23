@@ -677,7 +677,7 @@ class FuncSource:
         return ''.join(lines)
 
 
-def timecall(fn=None, immediate=True, timer=time.time, stats=0):
+def timecall(fn=None, immediate=True, timer=time.time, stats=0, fmt="%.3f"):
     """Wrap `fn` and print its execution time.
 
     Example::
@@ -709,7 +709,7 @@ def timecall(fn=None, immediate=True, timer=time.time, stats=0):
             return timecall(fn, immediate=immediate, timer=timer, stats=stats)
         return decorator
     # @timecall syntax -- we are a decorator.
-    fp = FuncTimer(fn, immediate=immediate, timer=timer, stats=stats)
+    fp = FuncTimer(fn, immediate=immediate, timer=timer, stats=stats, fmt=fmt)
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
 
@@ -724,7 +724,7 @@ def timecall(fn=None, immediate=True, timer=time.time, stats=0):
 
 class FuncTimer(object):
 
-    def __init__(self, fn, immediate, timer, stats):
+    def __init__(self, fn, immediate, timer, stats, fmt):
         self.fn = fn
         self.ncalls = 0
         self.totaltime = 0
@@ -732,8 +732,13 @@ class FuncTimer(object):
         self.timer = timer
         if stats > 0:
             self.stats = np.array([np.nan]*stats)
+            #all of %% needed because we double format this string
+            self._immediate_fmts = "%(fmt)s seconds (%(fmt)s +/- %(fmt)s 0%%%%:%(fmt)s 10%%%%:%(fmt)s 90%%%%:%(fmt)s 100%%%%:%(fmt)s)" % {'fmt':fmt}
+            self._atexit_fmts = "    %%d calls, %(fmt)s seconds (%(fmt)s +/- %(fmt)s 0%%%%:%(fmt)s 10%%%%:%(fmt)s 90%%%%:%(fmt)s 100%%%%:%(fmt)s)" % {'fmt':fmt}
         else:
             self.stats = None
+            self._immediate_fmts = "%(fmt)s seconds" % {'fmt':fmt}
+            self._atexit_fmts = "    %%d calls, %(fmt)s seconds (%(fmt)s seconds per call)" % {'fmt':fmt}
 
         if not immediate:
             atexit.register(self.atexit)
@@ -757,10 +762,9 @@ class FuncTimer(object):
                 lineno = fn.__code__.co_firstlineno
                 if self.stats is not None:
                     lq,uq,m,std,_min,_max = self._calc_stats()
-                    perf = "%.3f seconds (%.3f +/- %.3f 0%%:%.3f 10%%:%.3f 90%%:%.3f 100%%:%.3f)" % (
-                           duration, m, std, _min, lq, uq, _max)
+                    perf = self._immediate_fmts % (duration, m, std, _min, lq, uq, _max)
                 else:
-                    perf = "%.3f seconds" % duration
+                    perf = self._immediate_fmts % duration
                 sys.stderr.write("\n  %s (%s:%s):\n    %s\n\n" % (
                     funcname, filename, lineno, perf
                 ))
@@ -783,11 +787,9 @@ class FuncTimer(object):
         desc = "\n  %s (%s:%s):" % (funcname, filename, lineno)
         if self.stats is not None:
             lq,uq,m,std,_min,_max = self._calc_stats()
-            perf = "    %d calls, %.3f seconds (%.3f +/- %.3f 0%%:%.3f 10%%:%.3f 90%%:%.3f 100%%:%.3f)" % (
-                   self.ncalls, self.totaltime, m, std, _min, lq, uq, _max)
+            perf = self._atexit_fmts % (self.ncalls, self.totaltime, m, std, _min, lq, uq, _max)
         else:
-            perf = "    %d calls, %.3f seconds (%.3f seconds per call)" % (
-                   self.ncalls, self.totaltime, self.totaltime / self.ncalls)
+            perf = self._atexit_fmts % (self.ncalls, self.totaltime, self.totaltime / self.ncalls)
 
         print("%s\n%s" % (desc, perf))
 
