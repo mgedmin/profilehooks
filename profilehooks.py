@@ -677,7 +677,7 @@ class FuncSource:
         return ''.join(lines)
 
 
-def timecall(fn=None, immediate=True, timer=time.time):
+def timecall(fn=None, immediate=True, timer=None):
     """Wrap `fn` and print its execution time.
 
     Example::
@@ -704,6 +704,8 @@ def timecall(fn=None, immediate=True, timer=time.time):
             return timecall(fn, immediate=immediate, timer=timer)
         return decorator
     # @timecall syntax -- we are a decorator.
+    if timer is None:
+        timer = time.time
     fp = FuncTimer(fn, immediate=immediate, timer=timer)
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
