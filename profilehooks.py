@@ -225,8 +225,6 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
     fp = profiler_class(fn, skip=skip, filename=filename,
                         immediate=immediate, dirs=dirs,
                         sort=sort, entries=entries)
-    # fp = HotShotFuncProfile(fn, skip=skip, filename=filename, ...)
-         # or HotShotFuncProfile
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
 
