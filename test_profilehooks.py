@@ -184,6 +184,19 @@ def doctest_profile_with_args():
     """
 
 
+def doctest_profile_with_bad_args():
+    """Test for profile.
+
+        >>> @profilehooks.profile(profiler='nosuch')
+        ... def sample_fn(x, y, z):
+        ...     return x + y * z
+        Traceback (most recent call last):
+          ...
+        ValueError: only these profilers are available: profile...
+
+    """
+
+
 def doctest_profile_recursive_function():
     """Test for profile.
 
