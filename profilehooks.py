@@ -485,7 +485,11 @@ if hotshot is not None:
         def __call__(self, *args, **kw):
             """Profile a singe call to the function."""
             self.ncalls += 1
-            return self.profiler.runcall(self.fn, args, kw)
+            old_trace = sys.gettrace()
+            try:
+                return self.profiler.runcall(self.fn, args, kw)
+            finally:
+                sys.settrace(old_trace)
 
         def atexit(self):
             """Stop profiling and print profile information to sys.stderr.
@@ -518,6 +522,9 @@ if hotshot is not None:
                     fs.mark(lineno)
             reader.close()
             print(fs)
+            never_executed = fs.count_never_executed()
+            if never_executed:
+                print("%d lines were not executed." % never_executed)
 
 
 class TraceFuncCoverage:

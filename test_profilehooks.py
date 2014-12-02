@@ -35,6 +35,14 @@ def run_exitfuncs():
         fn(*args, **kw)
 
 
+def skipIf(condition, reason):
+    def decorator(fn):
+        if condition:
+            fn.__doc__ = 'Test skipped: %s' % reason
+        return fn
+    return decorator
+
+
 class TestCase(unittest.TestCase):
 
     maxDiff = None
@@ -72,9 +80,11 @@ class TestCoverage(TestCase):
         else:
             return "%s %s %s" % (x, y, z)
 
+    decorator = staticmethod(profilehooks.coverage)
+
     def setUp(self):
         super(TestCoverage, self).setUp()
-        self.sample_fn = profilehooks.coverage(self.sample_fn)
+        self.sample_fn = self.decorator(self.sample_fn)
 
     def test_coverage(self):
         self.sample_fn(1, 1, 1)
@@ -98,6 +108,15 @@ class TestCoverage(TestCase):
 
             1 lines were not executed.
             """.format(linenumber)))
+
+
+if profilehooks.hotshot is not None:
+    class TestCoverageWithHotShot(TestCoverage):
+        decorator = staticmethod(profilehooks.coverage_with_hotshot)
+
+        def tearDown(self):
+            super(TestCoverageWithHotShot, self).tearDown()
+            os.unlink('sample_fn.cprof')
 
 
 def doctest_coverage_when_source_is_not_available(self):
@@ -217,6 +236,7 @@ def doctest_profile_recursive_function():
     """
 
 
+@skipIf(profilehooks.hotshot is None, 'hotshot is not available')
 def doctest_profile_with_hotshot():
     """Test for profile
 
@@ -376,7 +396,7 @@ def additional_tests():
     optionflags = (doctest.REPORT_ONLY_FIRST_FAILURE |
                    doctest.ELLIPSIS)
     return unittest.TestSuite([
-        unittest.makeSuite(TestCoverage),
+        unittest.defaultTestLoader.loadTestsFromName(__name__),
         doctest.DocTestSuite(setUp=setUp, tearDown=tearDown,
                                 optionflags=optionflags),
     ])
