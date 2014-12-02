@@ -7,6 +7,7 @@ They are woefully incomplete.
 Run it with python setup.py test
 """
 
+import os
 import sys
 import doctest
 import unittest
@@ -212,6 +213,32 @@ def doctest_profile_recursive_function():
         function called 4 times
         ...
         6
+
+    """
+
+
+def doctest_profile_with_hotshot():
+    """Test for profile
+
+        >>> @profilehooks.profile(immediate=True, profiler='hotshot', skip=2)
+        ... def fac(n):
+        ...     if n < 1: return 1
+        ...     return n * fac(n-1)
+
+        >>> fac(1)
+        1
+
+        >>> fac(3)
+        <BLANKLINE>
+        *** PROFILER RESULTS ***
+        fac (<doctest test_profilehooks.doctest_profile_with_hotshot[0]>:1)
+        function called 6 times (2 calls not profiled)
+        ...
+        6
+
+    Hotshot leaves temporary files behind
+
+        >>> os.unlink('fac.prof')
 
     """
 

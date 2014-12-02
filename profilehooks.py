@@ -397,13 +397,14 @@ if cProfile is not None:
 
 if hotshot is not None:
 
-    class HotShotFuncProfile(object):
+    class HotShotFuncProfile(FuncProfile):
         """Profiler for a function (uses hotshot)."""
 
         # This flag is shared between all instances
         in_profiler = False
 
-        def __init__(self, fn, skip=0, filename=None):
+        def __init__(self, fn, skip=0, filename=None, immediate=False,
+                     dirs=False, sort=None, entries=40):
             """Creates a profiler for a function.
 
             Every profiler has its own log file (the name of which is derived
@@ -415,17 +416,13 @@ if hotshot is not None:
             The log file is not removed and remains there to clutter the
             current working directory.
             """
-            self.fn = fn
-            self.filename = filename
-            if self.filename:
+            if filename:
                 self.logfilename = filename + ".raw"
             else:
                 self.logfilename = fn.__name__ + ".prof"
-            self.profiler = hotshot.Profile(self.logfilename)
-            self.ncalls = 0
-            self.skip = skip
-            self.skipped = 0
-            atexit.register(self.atexit)
+            super(HotShotFuncProfile, self).__init__(
+                fn, skip=skip, filename=filename, immediate=immediate,
+                dirs=dirs, sort=sort, entries=entries)
 
         def __call__(self, *args, **kw):
             """Profile a singe call to the function."""
@@ -442,34 +439,19 @@ if hotshot is not None:
                 return self.profiler.runcall(self.fn, *args, **kw)
             finally:
                 HotShotFuncProfile.in_profiler = False
+                if self.immediate:
+                    self.print_stats()
+                    self.reset_stats()
 
-        def atexit(self):
-            """Stop profiling and print profile information to sys.stderr.
-
-            This function is registered as an atexit hook.
-            """
+        def print_stats(self):
             self.profiler.close()
-            funcname = self.fn.__name__
-            filename = self.fn.__code__.co_filename
-            lineno = self.fn.__code__.co_firstlineno
-            print("")
-            print("*** PROFILER RESULTS ***")
-            print("%s (%s:%s)" % (funcname, filename, lineno))
-            if self.skipped:
-                skipped = "(%d calls not profiled)" % self.skipped
-            else:
-                skipped = ""
-            print("function called %d times%s" % (self.ncalls, skipped))
-            print("")
-            stats = hotshot.stats.load(self.logfilename)
-            # hotshot.stats.load takes ages, and the .prof file eats megabytes, but
-            # a saved stats object is small and fast
-            if self.filename:
-                stats.dump_stats(self.filename)
-            # it is best to save before strip_dirs
-            stats.strip_dirs()
-            stats.sort_stats('cumulative', 'time', 'calls')
-            stats.print_stats(40)
+            self.stats = hotshot.stats.load(self.logfilename)
+            super(HotShotFuncProfile, self).print_stats()
+
+        def reset_stats(self):
+            self.profiler = hotshot.Profile(self.logfilename)
+            self.ncalls = 0
+            self.skipped = 0
 
     AVAILABLE_PROFILERS['hotshot'] = HotShotFuncProfile
 

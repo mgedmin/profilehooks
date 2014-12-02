@@ -4,6 +4,8 @@ Changelog
 1.7.1 (unreleased)
 ------------------
 
+- Make ``@profile(profiler='hotshot')`` work again.  This was probably broken
+  in 1.0 or 1.1, but nobody complained.
 
 
 1.7 (2013-10-16)
