@@ -488,7 +488,7 @@ if hotshot is not None:
             old_trace = sys.gettrace()
             try:
                 return self.profiler.runcall(self.fn, args, kw)
-            finally:
+            finally: # pragma: nocover
                 sys.settrace(old_trace)
 
         def atexit(self):

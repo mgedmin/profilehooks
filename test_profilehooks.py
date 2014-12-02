@@ -341,6 +341,19 @@ def doctest_timecall_not_immediate():
     """
 
 
+def doctest_timecall_never_called():
+    """Test for timecall.
+
+        >>> @profilehooks.timecall(immediate=False)
+        ... def sample_fn(x, y, z):
+        ...     print("%s %s %s" % (x, y, z))
+        ...     return x + y * z
+
+        >>> run_exitfuncs()
+
+    """
+
+
 def doctest_dump():
     """Test that profiling can save the stats in a file.
 
