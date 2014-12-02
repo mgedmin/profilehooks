@@ -434,6 +434,8 @@ if hotshot is not None:
             if HotShotFuncProfile.in_profiler:
                 # handle recursive calls
                 return self.fn(*args, **kw)
+            if self.profiler is None:
+                self.profiler = hotshot.Profile(self.logfilename)
             try:
                 HotShotFuncProfile.in_profiler = True
                 return self.profiler.runcall(self.fn, *args, **kw)
@@ -444,12 +446,15 @@ if hotshot is not None:
                     self.reset_stats()
 
         def print_stats(self):
-            self.profiler.close()
-            self.stats = hotshot.stats.load(self.logfilename)
+            if self.profiler is None:
+                self.stats = pstats.Stats(Profile())
+            else:
+                self.profiler.close()
+                self.stats = hotshot.stats.load(self.logfilename)
             super(HotShotFuncProfile, self).print_stats()
 
         def reset_stats(self):
-            self.profiler = hotshot.Profile(self.logfilename)
+            self.profiler = None
             self.ncalls = 0
             self.skipped = 0
 

@@ -263,6 +263,27 @@ def doctest_profile_with_hotshot():
     """
 
 
+@skipIf(profilehooks.hotshot is None, 'hotshot is not available')
+def doctest_profile_with_hotshot_no_calls():
+    """Test for profile
+
+        >>> @profilehooks.profile(profiler='hotshot', filename='fac.prof')
+        ... def fac(n):
+        ...     if n < 1: return 1
+        ...     return n * fac(n-1)
+
+        >>> run_exitfuncs()
+        <BLANKLINE>
+        *** PROFILER RESULTS ***
+        fac (<doctest test_profilehooks.doctest_profile_with_hotshot_no_calls[0]>:1)
+        function called 0 times
+        ...
+
+        >>> os.unlink('fac.prof')
+
+    """
+
+
 def doctest_timecall():
     """Test for timecall.
 
