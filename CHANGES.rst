@@ -1,11 +1,19 @@
 Changelog
 =========
 
-1.7.1 (unreleased)
+1.7.1 (2014-12-02)
 ------------------
 
 - Make ``@profile(profiler='hotshot')`` work again.  This was probably broken
   in 1.0 or 1.1, but nobody complained.
+
+- Fix missing space in the output of ``@profile(skip=N)``.
+
+- Make ``@coverage_with_hotshot`` output match ``@coverage`` output precisely.
+
+- 100% test coverage.
+
+- Claim Python 3.4 and PyPy compatibility.
 
 
 1.7 (2013-10-16)
