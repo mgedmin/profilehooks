@@ -574,10 +574,12 @@ class TraceFuncCoverage:
         self.ncalls += 1
         if TraceFuncCoverage.tracing:
             return self.fn(*args, **kw)
+        old_trace = sys.gettrace()
         try:
             TraceFuncCoverage.tracing = True
             return self.tracer.runfunc(self.fn, *args, **kw)
         finally:
+            sys.settrace(old_trace)
             TraceFuncCoverage.tracing = False
 
     def atexit(self):
