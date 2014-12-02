@@ -221,7 +221,7 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
             break
     else:
         raise ValueError('only these profilers are available: %s'
-                             % ', '.join(AVAILABLE_PROFILERS))
+                             % ', '.join(sorted(AVAILABLE_PROFILERS)))
     fp = profiler_class(fn, skip=skip, filename=filename,
                         immediate=immediate, dirs=dirs,
                         sort=sort, entries=entries)
