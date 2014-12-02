@@ -184,6 +184,25 @@ def doctest_profile_with_args():
     """
 
 
+def doctest_profile_recursive_function():
+    """Test for profile.
+
+        >>> @profilehooks.profile(immediate=True)
+        ... def fac(n):
+        ...     if n < 1: return 1
+        ...     return n * fac(n-1)
+
+        >>> fac(3)
+        <BLANKLINE>
+        *** PROFILER RESULTS ***
+        fac (<doctest test_profilehooks.doctest_profile_recursive_function[0]>:1)
+        function called 4 times
+        ...
+        6
+
+    """
+
+
 def doctest_timecall():
     """Test for timecall.
 
