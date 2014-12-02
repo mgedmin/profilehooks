@@ -11,6 +11,8 @@ import os
 import sys
 import doctest
 import unittest
+import linecache
+import inspect
 import atexit
 import textwrap
 import time
@@ -80,18 +82,25 @@ class TestCoverage(TestCase):
         else:
             return "%s %s %s" % (x, y, z)
 
+    def sample_fn_2(self):
+        try:
+            os.path.join('a', 'b')
+        finally:
+            x = 5
+        del x
+
     decorator = staticmethod(profilehooks.coverage)
 
-    def setUp(self):
-        super(TestCoverage, self).setUp()
-        self.sample_fn = self.decorator(self.sample_fn)
+    if not hasattr(TestCase, 'assertMultiLineEqual'):  # Python 2.6
+        assertMultiLineEqual = TestCase.assertEqual
 
     def test_coverage(self):
-        self.sample_fn(1, 1, 1)
-        self.sample_fn(1, 2, 3)
-        linenumber = self.__class__.sample_fn.__code__.co_firstlineno
+        sample_fn = self.decorator(self.sample_fn)
+        sample_fn(1, 1, 1)
+        sample_fn(1, 2, 3)
+        linenumber = self.sample_fn.__code__.co_firstlineno
         run_exitfuncs()
-        self.assertEqual(
+        self.assertMultiLineEqual(
             sys.stdout.getvalue(),
             '\n' + textwrap.dedent("""\
             *** COVERAGE RESULTS ***
@@ -109,6 +118,26 @@ class TestCoverage(TestCase):
             1 lines were not executed.
             """.format(linenumber)))
 
+    def test_coverage_again(self):
+        sample_fn_2 = self.decorator(self.sample_fn_2)
+        sample_fn_2()
+        linenumber = self.sample_fn_2.__code__.co_firstlineno
+        run_exitfuncs()
+        self.assertMultiLineEqual(
+            sys.stdout.getvalue(),
+            '\n' + textwrap.dedent("""\
+            *** COVERAGE RESULTS ***
+            sample_fn_2 (test_profilehooks.py:{0})
+            function called 1 times
+
+                       def sample_fn_2(self):
+                1:         try:
+                1:             os.path.join('a', 'b')
+                           finally:
+                1:             x = 5
+                1:         del x
+
+            """.format(linenumber)))
 
 if profilehooks.hotshot is not None:
     class TestCoverageWithHotShot(TestCoverage):
@@ -116,7 +145,10 @@ if profilehooks.hotshot is not None:
 
         def tearDown(self):
             super(TestCoverageWithHotShot, self).tearDown()
-            os.unlink('sample_fn.cprof')
+            if os.path.exists('sample_fn.cprof'):
+                os.unlink('sample_fn.cprof')
+            if os.path.exists('sample_fn_2.cprof'):
+                os.unlink('sample_fn_2.cprof')
 
 
 def doctest_coverage_when_source_is_not_available(self):
@@ -144,6 +176,36 @@ def doctest_coverage_when_source_is_not_available(self):
         function called 2 times
         <BLANKLINE>
         cannot show coverage data since co_filename is None
+
+    """
+
+
+def doctest_FuncSource_no_source_lines():
+    """Test for FuncSource
+
+        >>> fs = profilehooks.FuncSource(doctest_FuncSource_no_source_lines)
+        >>> fs.find_source_lines()
+        >>> fs.firstcodelineno != 0
+        True
+
+    """
+
+
+def doctest_FuncSource_no_source_file():
+    """Test for FuncSource
+
+    Define a function with a strange-looking filename
+
+        >>> def mock_getsourcelines(fn):
+        ...     raise IOError()
+
+        >>> real_getsourcelines = inspect.getsourcelines
+        >>> inspect.getsourcelines = mock_getsourcelines
+
+        >>> fs = profilehooks.FuncSource(doctest_FuncSource_no_source_file)
+        >>> fs.filename
+
+        >>> inspect.getsourcelines = real_getsourcelines
 
     """
 

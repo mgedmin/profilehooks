@@ -628,7 +628,8 @@ class FuncSource:
             self.sourcelines.setdefault(lineno, 0)
         if lines:
             self.firstcodelineno = min(lines)
-        else:
+        else:  # pragma: nocover
+            # This branch cannot be reached, I'm just being paranoid.
             self.firstcodelineno = self.firstlineno
 
     def mark(self, lineno, count=1):
@@ -660,7 +661,10 @@ class FuncSource:
             if counter is None:
                 prefix = ' ' * 7
             elif counter == 0:
-                if self.blank_rx.match(line):
+                if self.blank_rx.match(line):  # pragma: nocover
+                    # This is an workaround for an ancient bug I can't
+                    # reproduce, perhaps because it was fixed, or perhaps
+                    # because I can't remember all the details.
                     prefix = ' ' * 7
                 else:
                     prefix = '>' * 6 + ' '
