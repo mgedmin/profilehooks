@@ -572,13 +572,13 @@ class TraceFuncCoverage:
     def __call__(self, *args, **kw):
         """Profile a singe call to the function."""
         self.ncalls += 1
-        if TraceFuncCoverage.tracing:
+        if TraceFuncCoverage.tracing: # pragma: nocover
             return self.fn(*args, **kw)
         old_trace = sys.gettrace()
         try:
             TraceFuncCoverage.tracing = True
             return self.tracer.runfunc(self.fn, *args, **kw)
-        finally:
+        finally: # pragma: nocover
             sys.settrace(old_trace)
             TraceFuncCoverage.tracing = False
 
