@@ -104,7 +104,7 @@ Released under the MIT licence since December 2006:
 __author__ = "Marius Gedminas <marius@gedmin.as>"
 __copyright__ = "Copyright 2004-2014 Marius Gedminas"
 __license__ = "MIT"
-__version__ = "1.7.1"
+__version__ = "1.7.2dev"
 __date__ = "2014-12-02"
 
 
