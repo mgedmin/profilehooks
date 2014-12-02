@@ -353,7 +353,7 @@ class FuncProfile(object):
         print("*** PROFILER RESULTS ***")
         print("%s (%s:%s)" % (funcname, filename, lineno))
         if self.skipped:
-            skipped = "(%d calls not profiled)" % self.skipped
+            skipped = " (%d calls not profiled)" % self.skipped
         else:
             skipped = ""
         print("function called %d times%s" % (self.ncalls, skipped))

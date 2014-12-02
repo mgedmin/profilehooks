@@ -161,6 +161,29 @@ def doctest_profile():
     """
 
 
+def doctest_profile_with_args():
+    """Test for profile.
+
+        >>> @profilehooks.profile(profiler='profile', skip=1,
+        ...                       immediate=True, sort='calls')
+        ... def sample_fn(x, y, z):
+        ...     return x + y * z
+
+    You can call that function a few times
+
+        >>> sample_fn(1, 2, z=3)
+        7
+        >>> sample_fn(3, 2, 1)
+        <BLANKLINE>
+        *** PROFILER RESULTS ***
+        sample_fn (<doctest test_profilehooks.doctest_profile_with_args[0]>:1)
+        function called 2 times (1 calls not profiled)
+        ...
+        5
+
+    """
+
+
 def doctest_timecall():
     """Test for timecall.
 
