@@ -150,14 +150,16 @@ __all__ = ['coverage', 'coverage_with_hotshot', 'profile', 'timecall']
 
 def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
             sort=None, entries=40,
-            profiler=('cProfile', 'profile', 'hotshot')):
+            profiler=('cProfile', 'profile', 'hotshot'),
+            stdout=True):
     """Mark `fn` for profiling.
 
     If `skip` is > 0, first `skip` calls to `fn` will not be profiled.
 
     If `immediate` is False, profiling results will be printed to
     sys.stdout on program termination.  Otherwise results will be printed
-    after each call.
+    after each call.  (If you don't want this, set stdout=False and specify a
+    `filename` to store profile data.)
 
     If `dirs` is False only the name of the file will be printed.
     Otherwise the full path is used.
@@ -183,7 +185,8 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
     'profile', 'hotshot').
 
     If `filename` is specified, the profile stats will be stored in the
-    named file.  You can load them pstats.Stats(filename).
+    named file.  You can load them with pstats.Stats(filename) or use a
+    visualization tool like RunSnakeRun.
 
     Usage::
 
@@ -210,7 +213,7 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
             return profile(fn, skip=skip, filename=filename,
                            immediate=immediate, dirs=dirs,
                            sort=sort, entries=entries,
-                           profiler=profiler)
+                           profiler=profiler, stdout=stdout)
         return decorator
     # @profile syntax -- we are a decorator.
     if isinstance(profiler, str):
@@ -224,7 +227,7 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
                              % ', '.join(sorted(AVAILABLE_PROFILERS)))
     fp = profiler_class(fn, skip=skip, filename=filename,
                         immediate=immediate, dirs=dirs,
-                        sort=sort, entries=entries)
+                        sort=sort, entries=entries, stdout=stdout)
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
 
@@ -300,7 +303,7 @@ class FuncProfile(object):
     Profile = Profile
 
     def __init__(self, fn, skip=0, filename=None, immediate=False, dirs=False,
-                 sort=None, entries=40):
+                 sort=None, entries=40, stdout=True):
         """Creates a profiler for a function.
 
         Every profiler has its own log file (the name of which is derived
@@ -313,6 +316,7 @@ class FuncProfile(object):
         self.skip = skip
         self.filename = filename
         self.immediate = immediate
+        self.stdout = stdout
         self.dirs = dirs
         self.sort = sort or ('cumulative', 'time', 'calls')
         if isinstance(self.sort, str):
@@ -346,25 +350,26 @@ class FuncProfile(object):
 
     def print_stats(self):
         """Print profile information to sys.stdout."""
-        funcname = self.fn.__name__
-        filename = self.fn.__code__.co_filename
-        lineno = self.fn.__code__.co_firstlineno
-        print("")
-        print("*** PROFILER RESULTS ***")
-        print("%s (%s:%s)" % (funcname, filename, lineno))
-        if self.skipped:
-            skipped = " (%d calls not profiled)" % self.skipped
-        else:
-            skipped = ""
-        print("function called %d times%s" % (self.ncalls, skipped))
-        print("")
         stats = self.stats
         if self.filename:
             stats.dump_stats(self.filename)
-        if not self.dirs:
-            stats.strip_dirs()
-        stats.sort_stats(*self.sort)
-        stats.print_stats(self.entries)
+        if self.stdout:
+            funcname = self.fn.__name__
+            filename = self.fn.__code__.co_filename
+            lineno = self.fn.__code__.co_firstlineno
+            print("")
+            print("*** PROFILER RESULTS ***")
+            print("%s (%s:%s)" % (funcname, filename, lineno))
+            if self.skipped:
+                skipped = " (%d calls not profiled)" % self.skipped
+            else:
+                skipped = ""
+            print("function called %d times%s" % (self.ncalls, skipped))
+            print("")
+            if not self.dirs:
+                stats.strip_dirs()
+            stats.sort_stats(*self.sort)
+            stats.print_stats(self.entries)
 
     def reset_stats(self):
         """Reset accumulated profiler statistics."""
@@ -378,6 +383,7 @@ class FuncProfile(object):
 
         This function is registered as an atexit hook.
         """
+        # XXX: uh, why even register this as an atexit hook if immediate is True?
         if not self.immediate:
             self.print_stats()
 
@@ -404,7 +410,7 @@ if hotshot is not None:
         in_profiler = False
 
         def __init__(self, fn, skip=0, filename=None, immediate=False,
-                     dirs=False, sort=None, entries=40):
+                     dirs=False, sort=None, entries=40, stdout=True):
             """Creates a profiler for a function.
 
             Every profiler has its own log file (the name of which is derived
@@ -422,7 +428,7 @@ if hotshot is not None:
                 self.logfilename = fn.__name__ + ".prof"
             super(HotShotFuncProfile, self).__init__(
                 fn, skip=skip, filename=filename, immediate=immediate,
-                dirs=dirs, sort=sort, entries=entries)
+                dirs=dirs, sort=sort, entries=entries, stdout=stdout)
 
         def __call__(self, *args, **kw):
             """Profile a singe call to the function."""
