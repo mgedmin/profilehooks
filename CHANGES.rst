@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.8.0 (unreleased)
+1.8.0 (2015-03-25)
 ------------------
 
 - New option: ``@profile(stdout=False)`` to suppress output to sys.stdout.
