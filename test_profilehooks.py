@@ -11,7 +11,6 @@ import os
 import sys
 import doctest
 import unittest
-import linecache
 import inspect
 import atexit
 import textwrap
@@ -145,10 +144,11 @@ if profilehooks.hotshot is not None:
 
         def tearDown(self):
             super(TestCoverageWithHotShot, self).tearDown()
-            if os.path.exists('sample_fn.cprof'):
-                os.unlink('sample_fn.cprof')
-            if os.path.exists('sample_fn_2.cprof'):
-                os.unlink('sample_fn_2.cprof')
+            for name in 'sample_fn', 'sample_fn_2':
+                try:
+                    os.unlink('%s.%d.cprof' % (name, os.getpid()))
+                except OSError:
+                    pass
 
 
 def doctest_coverage_when_source_is_not_available(self):
@@ -320,7 +320,7 @@ def doctest_profile_with_hotshot():
 
     Hotshot leaves temporary files behind
 
-        >>> os.unlink('fac.prof')
+        >>> os.unlink('fac.%d.prof' % os.getpid())
 
     """
 

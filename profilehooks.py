@@ -112,6 +112,7 @@ import atexit
 import inspect
 import sys
 import re
+import os
 
 # For profiling
 from profile import Profile
@@ -425,7 +426,7 @@ if hotshot is not None:
             if filename:
                 self.logfilename = filename + ".raw"
             else:
-                self.logfilename = fn.__name__ + ".prof"
+                self.logfilename = "%s.%d.prof" % (fn.__name__, os.getpid())
             super(HotShotFuncProfile, self).__init__(
                 fn, skip=skip, filename=filename, immediate=immediate,
                 dirs=dirs, sort=sort, entries=entries, stdout=stdout)
@@ -488,7 +489,7 @@ if hotshot is not None:
             current working directory.
             """
             self.fn = fn
-            self.logfilename = fn.__name__ + ".cprof"
+            self.logfilename = "%s.%d.cprof" % (fn.__name__, os.getpid())
             self.profiler = _hotshot.coverage(self.logfilename)
             self.ncalls = 0
             atexit.register(self.atexit)
@@ -565,7 +566,7 @@ class TraceFuncCoverage:
         current working directory.
         """
         self.fn = fn
-        self.logfilename = fn.__name__ + ".cprof"
+        self.logfilename = "%s.%d.cprof" % (fn.__name__, os.getpid())
         self.ncalls = 0
         atexit.register(self.atexit)
 
