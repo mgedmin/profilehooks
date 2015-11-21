@@ -11,9 +11,15 @@ def read(filename):
         return f.read()
 
 
+with open(os.path.join(here, 'profilehooks.py')) as f:
+    for line in f:
+        if line.startswith('__version__ = '):
+            version = line.split(' = ')[1].strip('"\n')
+
+
 setup(
     name='profilehooks',
-    version='1.8.1.dev0',
+    version=version,
     author='Marius Gedminas',
     author_email='marius@gedmin.as',
     url='http://mg.pov.lt/profilehooks/',
