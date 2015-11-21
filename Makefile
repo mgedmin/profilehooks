@@ -87,7 +87,7 @@ release: releasechecklist
 	# I'm chicken so I won't actually do these things yet
 	@echo "Please run"
 	@echo
-	@echo "  rm -rf dist && $(PYTHON) setup.py sdist && twine upload dist/* && git tag `$(PYTHON) setup.py --version`"
+	@echo "  rm -rf dist && $(PYTHON) setup.py -q sdist bdist_wheel && twine upload dist/* && git tag `$(PYTHON) setup.py --version`"
 	@echo
 	@echo "Please increment the version number in $(FILE_WITH_VERSION)"
 	@echo "and add a new empty entry at the top of the changelog in $(FILE_WITH_CHANGELOG), then"
