@@ -14,7 +14,7 @@ def read(filename):
 with open(os.path.join(here, 'profilehooks.py')) as f:
     for line in f:
         if line.startswith('__version__ = '):
-            version = line.split(' = ')[1].strip('"\n')
+            version = line.split(' = ')[1].strip('\'"\n')
 
 
 setup(

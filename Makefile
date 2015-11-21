@@ -20,7 +20,7 @@ coverage:
 test-all-pythons:
 	# poor man's tox -- why not use the real thing instead?
 	set -e; \
-	for ver in 2.6 2.7 3.0 3.1 3.2 3.3; do \
+	for ver in 2.6 2.7 3.0 3.1 3.2 3.3 3.4 3.5; do \
 		if which python$$ver > /dev/null; then \
 			$(MAKE) test PYTHON=python$$ver; \
 		else \
@@ -37,7 +37,7 @@ preview-pypi-description:
 
 .PHONY: dist
 dist:
-	$(PYTHON) setup.py sdist
+	$(PYTHON) setup.py -q sdist
 
 .PHONY: distcheck
 distcheck:
@@ -68,9 +68,6 @@ distcheck:
 
 .PHONY: releasechecklist
 releasechecklist:
-	@ver_line='__version__ = "'`$(PYTHON) setup.py --version`'"' && \
-	    grep -q "^$$ver_line$$" $(FILE_WITH_METADATA) || { \
-	        echo "$(FILE_WITH_METADATA) doesn't specify $$ver_line"; exit 1; }
 	@date_line='__date__ = "'`date +%Y-%m-%d`'"' && \
 	    grep -q "^$$date_line$$" $(FILE_WITH_METADATA) || { \
 	        echo "$(FILE_WITH_METADATA) doesn't specify $$date_line"; exit 1; }

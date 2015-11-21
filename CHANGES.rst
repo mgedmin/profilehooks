@@ -1,9 +1,13 @@
 Changelog
 =========
 
-1.8.1 (unreleased)
+1.8.1 (2015-11-21)
 ------------------
 
+- Include PID in temporary filenames:
+  https://github.com/mgedmin/profilehooks/issues/6.
+
+- Claim Python 3.5 compatibility.
 
 
 1.8.0 (2015-03-25)
