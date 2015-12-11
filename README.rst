@@ -4,6 +4,13 @@ profilehooks
 .. image:: https://travis-ci.org/mgedmin/profilehooks.svg?branch=master
    :target: https://travis-ci.org/mgedmin/profilehooks
 
+.. image:: https://ci.appveyor.com/api/projects/status/github/mgedmin/profilehooks?branch=master&svg=true
+   :target: https://ci.appveyor.com/project/mgedmin/profilehooks
+
+.. image:: https://coveralls.io/repos/mgedmin/profilehooks/badge.svg?branch=master
+   :target: https://coveralls.io/r/mgedmin/profilehooks
+
+
 It's a collection of decorators for profiling functions.  E.g. to profile a
 single function::
 
