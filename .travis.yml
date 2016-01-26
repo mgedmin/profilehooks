@@ -3,15 +3,12 @@ sudo: false
 python:
     - 2.6
     - 2.7
-    - 3.2
     - 3.3
     - 3.4
     - 3.5
     - pypy
-    - pypy3
 install:
     - pip install coverage coveralls
-    - if [ $TRAVIS_PYTHON_VERSION = 3.2 ]; then pip install 'coverage<4.0'; fi
 script:
     - coverage run --source=profilehooks test_profilehooks.py
 after_success:
