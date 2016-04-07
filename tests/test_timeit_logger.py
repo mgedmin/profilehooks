@@ -1,9 +1,10 @@
+from __future__ import print_function
 import logging
+import unittest
 from mock import patch
 import profilehooks
 import sys
 import time
-import unittest
 
 
 class testProfilehooksTimeitLogger(unittest.TestCase):
@@ -14,6 +15,9 @@ class testProfilehooksTimeitLogger(unittest.TestCase):
         return delay
 
     def test_timecall_with_logger(self):
+        if sys.version_info < (2, 7):
+            print('Test does not support python 2.6')
+            return
         logger_name = 'logtest'
         logger = logging.getLogger(logger_name)
         with patch.object(logger, 'log') as mock_logger:
