@@ -775,7 +775,9 @@ class FuncTimer(object):
                 kw_str = ', '.join(['%s=%s' % (key, value) for key, value in kw.items()])
                 arguments_str = args_str
                 if kw_str:
-                    arguments_str += ', ' + kw_str
+                    if args_str:
+                        arguments_str += ', '
+                    arguments_str += kw_str
                 message = "%s:line %s:%s(%s):%.3f seconds" % (
                     filename,
                     lineno,
