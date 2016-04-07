@@ -707,6 +707,10 @@ def timecall(
 
         @timecall(timer=time.clock)
 
+    You can also log the output to a logger by specifying the name and level
+    of the logger to use, eg:
+
+        @timecall(immediate=True, log_name='profile_log', log_level=logging.DEBUG)
     """
     if fn is None:  # @timecall() syntax -- we are a decorator maker
         def decorator(fn):

@@ -1,54 +1,31 @@
-import doctest
 import logging
+from mock import patch
 import profilehooks
 import sys
 import time
 import unittest
 
-_exitfuncs = []
 
+class testProfilehooksTimeitLogger(unittest.TestCase):
 
+    def sample_fn(self, delay_time, delay=False):
+        if delay:
+            time.sleep(delay_time)
+        return delay
 
-def _register_exitfunc(func, *args, **kw):
-    _exitfuncs.append((func, args, kw))
-
-
-def run_exitfuncs():
-    for fn, args, kw in _exitfuncs:
-        fn(*args, **kw)
-
-
-def skipIf(condition, reason):
-    def decorator(fn):
-        if condition:
-            fn.__doc__ = 'Test skipped: %s' % reason
-        return fn
-    return decorator
-
-
-def doctest_timecall_with_logger():
-    """Test for timecall with logging
-    >>> @profilehooks.timecall(immediate=True, log_name='logtest', log_level=logging.INFO)
-    ... def example(a, delay=True):
-    ...    if delay:
-    ...        time.sleep(a)
-    ...    return a
-    >>> example(.1, delay=True)
-    """
-
-
-def additional_tests():
-    optionflags = (doctest.REPORT_ONLY_FIRST_FAILURE |
-                   doctest.ELLIPSIS)
-    return unittest.TestSuite([
-        unittest.defaultTestLoader.loadTestsFromName(__name__),
-        doctest.DocTestSuite(optionflags=optionflags),
-    ])
-
+    def test_timecall_with_logger(self):
+        logger_name = 'logtest'
+        logger = logging.getLogger(logger_name)
+        with patch.object(logger, 'log') as mock_logger:
+            sample_fn = profilehooks.timecall(
+                self.sample_fn, log_name=logger_name, log_level=logging.INFO
+            )
+            sample_fn(.1)
+            mock_logger.assert_called_once()
+            self.assertEqual(mock_logger.call_args[0][0], logging.INFO)
+            self.assertIn('sample_fn(0.1)', mock_logger.call_args[0][1])
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    __name__ = 'test_profilehooks'
-    sys.modules[__name__] = sys.modules['__main__']
-    unittest.main(defaultTest='additional_tests')
+    unittest.main()
