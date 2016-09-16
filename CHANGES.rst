@@ -7,6 +7,10 @@ Changelog
 - Drop claim of Python 3.2 compatibility.  Everything still works, except I'm
   no longer running automated tests on 3.2, so things might regress.
 
+- Drop Python 2.6 compatibility.
+
+- Add Python 3.6 compatibility.
+
 
 1.8.1 (2015-11-21)
 ------------------
