@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.9.0 (unreleased)
+1.9.0 (2017-01-02)
 ------------------
 
 - Drop claim of Python 3.2 compatibility.  Everything still works, except I'm
