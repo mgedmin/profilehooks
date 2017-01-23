@@ -14,7 +14,6 @@ import unittest
 import inspect
 import atexit
 import textwrap
-import time
 
 try:
     from cStringIO import StringIO
@@ -477,15 +476,12 @@ def setUp(test):
     sys.stderr = stderr_wrapper
     atexit.register = _register_exitfunc
     del _exitfuncs[:]
-    test.real_time = time.time
-    time.time = lambda: 1411735756
 
 
 def tearDown(test):
     sys.stderr = test.real_stderr
     atexit.register = test.real_register
     del _exitfuncs[:]
-    time.time = test.real_time
 
 
 def additional_tests():

@@ -143,7 +143,7 @@ except ImportError:
     cProfile = None
 
 # For timecall
-import time
+import timeit
 
 
 # registry of available profilers
@@ -714,7 +714,7 @@ def timecall(fn=None, immediate=True, timer=None):
 
         @timecall(immediate=False)
 
-    You can also choose a timing method other than the default ``time.time()``,
+    You can also choose a timing method other than the default ``timeit.default_timer()``,
     e.g.:
 
         @timecall(timer=time.clock)
@@ -726,7 +726,7 @@ def timecall(fn=None, immediate=True, timer=None):
         return decorator
     # @timecall syntax -- we are a decorator.
     if timer is None:
-        timer = time.time
+        timer = timeit.default_timer
     fp = FuncTimer(fn, immediate=immediate, timer=timer)
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
