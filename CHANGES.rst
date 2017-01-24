@@ -1,10 +1,12 @@
 Changelog
 =========
 
-1.9.1 (unreleased)
-------------------
+1.10.0 (unreleased)
+-------------------
 
-- Nothing changed yet.
+- ``@timecall()`` now defaults to the highest-precision timer
+  (``timeit.default_timer()``) instead of ``time.time()``:
+  https://github.com/mgedmin/profilehooks/pull/11
 
 
 1.9.0 (2017-01-02)
