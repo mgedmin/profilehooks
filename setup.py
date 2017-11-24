@@ -22,7 +22,7 @@ setup(
     version=version,
     author='Marius Gedminas',
     author_email='marius@gedmin.as',
-    url='http://mg.pov.lt/profilehooks/',
+    url='https://mg.pov.lt/profilehooks/',
     description='Decorators for profiling/timing/tracing individual functions',
     long_description=read('README.rst') + '\n\n' + read('CHANGES.rst'),
     classifiers=[

@@ -54,7 +54,7 @@ instead of a detailed (but costly) profile.
 Caveats
 
   A thread on python-dev convinced me that hotshot produces bogus numbers.
-  See http://mail.python.org/pipermail/python-dev/2005-November/058264.html
+  See https://mail.python.org/pipermail/python-dev/2005-November/058264.html
 
   I don't know what will happen if a decorated function will try to call
   another decorated function.  All decorators probably need to explicitly

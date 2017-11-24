@@ -51,5 +51,5 @@ Also functions can be available in Python console or module if run it with -m ar
 Full documentation is available through ``pydoc profilehooks`` after
 installation.
 
-The home page for this module is http://mg.pov.lt/profilehooks.  It has
+The home page for this module is https://mg.pov.lt/profilehooks.  It has
 screensho, uh, that is, more examples.

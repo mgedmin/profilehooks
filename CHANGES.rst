@@ -131,7 +131,7 @@ Changelog
 ----------------
 
 - First public release (it didn't actually have a version number), announced on
-  my blog: http://mg.pov.lt/blog/profiling.html
+  my blog: https://mg.pov.lt/blog/profiling.html
 
 - @profile and @coverage decorators that didn't accept any arguments.
 
