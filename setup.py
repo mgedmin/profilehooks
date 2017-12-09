@@ -42,6 +42,7 @@ setup(
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
     ],
+    keywords='profile coverage decorators',
     license='MIT',
 
     py_modules=['profilehooks'],

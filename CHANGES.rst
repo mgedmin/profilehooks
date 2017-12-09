@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.10.0 (unreleased)
+1.10.0 (2017-12-09)
 -------------------
 
 - ``@timecall()`` now defaults to the highest-precision timer

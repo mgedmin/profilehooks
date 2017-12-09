@@ -74,7 +74,7 @@ Caveats
   executed.  For this reason coverage analysis now uses trace.py which is
   slower, but more accurate.
 
-Copyright (c) 2004--2016 Marius Gedminas <marius@pov.lt>
+Copyright (c) 2004--2017 Marius Gedminas <marius@gedmin.as>
 Copyright (c) 2007 Hanno Schlichting
 Copyright (c) 2008 Florian Schulze
 
@@ -104,8 +104,8 @@ Released under the MIT licence since December 2006:
 __author__ = "Marius Gedminas <marius@gedmin.as>"
 __copyright__ = "Copyright 2004-2017 Marius Gedminas and contributors"
 __license__ = "MIT"
-__version__ = '1.10.0.dev0'
-__date__ = "2017-01-02"
+__version__ = '1.10.0'
+__date__ = "2017-12-09"
 
 
 import atexit
@@ -117,6 +117,9 @@ import sys
 # For profiling
 from profile import Profile
 import pstats
+
+# For timecall
+import timeit
 
 # For hotshot profiling (inaccurate!)
 try:
@@ -141,9 +144,6 @@ try:
     import cProfile
 except ImportError:
     cProfile = None
-
-# For timecall
-import timeit
 
 
 # registry of available profilers
@@ -503,7 +503,7 @@ if hotshot is not None:
             old_trace = sys.gettrace()
             try:
                 return self.profiler.runcall(self.fn, args, kw)
-            finally: # pragma: nocover
+            finally:  # pragma: nocover
                 sys.settrace(old_trace)
 
         def atexit(self):
@@ -528,10 +528,11 @@ if hotshot is not None:
                 if what == hotshot.log.LINE:
                     fs.mark(lineno)
                 if what == hotshot.log.ENTER:
-                    # hotshot gives us the line number of the function definition
-                    # and never gives us a LINE event for the first statement in
-                    # a function, so if we didn't perform this mapping, the first
-                    # statement would be marked as never executed
+                    # hotshot gives us the line number of the function
+                    # definition and never gives us a LINE event for the first
+                    # statement in a function, so if we didn't perform this
+                    # mapping, the first statement would be marked as never
+                    # executed
                     if lineno == fs.firstlineno:
                         lineno = fs.firstcodelineno
                     fs.mark(lineno)
@@ -576,13 +577,13 @@ class TraceFuncCoverage:
     def __call__(self, *args, **kw):
         """Profile a singe call to the function."""
         self.ncalls += 1
-        if TraceFuncCoverage.tracing: # pragma: nocover
+        if TraceFuncCoverage.tracing:  # pragma: nocover
             return self.fn(*args, **kw)
         old_trace = sys.gettrace()
         try:
             TraceFuncCoverage.tracing = True
             return self.tracer.runfunc(self.fn, *args, **kw)
-        finally: # pragma: nocover
+        finally:  # pragma: nocover
             sys.settrace(old_trace)
             TraceFuncCoverage.tracing = False
 
@@ -710,12 +711,12 @@ def timecall(fn=None, immediate=True, timer=None):
         somefunc(2, 3)
 
     will print the time taken by somefunc on every call.  If you want just
-    a summary at program termination, use
+    a summary at program termination, use ::
 
         @timecall(immediate=False)
 
-    You can also choose a timing method other than the default ``timeit.default_timer()``,
-    e.g.:
+    You can also choose a timing method other than the default
+    ``timeit.default_timer()``, e.g.::
 
         @timecall(timer=time.clock)
 
@@ -782,6 +783,7 @@ class FuncTimer(object):
                   funcname, filename, lineno, self.ncalls,
                   self.totaltime, self.totaltime / self.ncalls)
               )
+
 
 if __name__ == '__main__':
 
