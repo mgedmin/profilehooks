@@ -634,8 +634,8 @@ class FuncSource:
         if self.filename is None:
             return
         strs = self._find_docstrings(self.filename)
-        lines = {ln for off, ln in dis.findlinestarts(self.fn.__code__)
-                 if ln not in strs}
+        lines = [ln for off, ln in dis.findlinestarts(self.fn.__code__)
+                 if ln not in strs]
         for lineno in lines:
             self.sourcelines.setdefault(lineno, 0)
         if lines:
