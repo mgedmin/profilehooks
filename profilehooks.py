@@ -319,7 +319,7 @@ class FuncProfile(object):
         self.fn = fn
         self.skip = skip
         self.filename = filename
-        self.immediate = immediate
+        self._immediate = immediate
         self.stdout = stdout
         self.dirs = dirs
         self.sort = sort or ('cumulative', 'time', 'calls')
@@ -327,7 +327,12 @@ class FuncProfile(object):
             self.sort = (self.sort, )
         self.entries = entries
         self.reset_stats()
-        atexit.register(self.atexit)
+        if not self.immediate:
+            atexit.register(self.atexit)
+
+    @property
+    def immediate(self):
+        return self._immediate
 
     def __call__(self, *args, **kw):
         """Profile a singe call to the function."""
@@ -387,9 +392,7 @@ class FuncProfile(object):
 
         This function is registered as an atexit hook.
         """
-        # XXX: uh, why even register this as an atexit hook if immediate is True?
-        if not self.immediate:
-            self.print_stats()
+        self.print_stats()
 
 
 AVAILABLE_PROFILERS['profile'] = FuncProfile
