@@ -650,7 +650,8 @@ class FuncSource:
         strs = set()
         prev = token.INDENT  # so module docstring is detected as docstring
         with open(filename) as f:
-            for ttype, tstr, start, end, line in tokenize.generate_tokens(f.readline):
+            tokens = tokenize.generate_tokens(f.readline)
+            for ttype, tstr, start, end, line in tokens:
                 if ttype == token.STRING and prev == token.INDENT:
                     strs.update(range(start[0], end[0] + 1))
                 prev = ttype
