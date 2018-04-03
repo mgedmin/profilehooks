@@ -761,8 +761,8 @@ class FuncTimer(object):
         fn = self.fn
         timer = self.timer
         self.ncalls += 1
+        start = timer()
         try:
-            start = timer()
             return fn(*args, **kw)
         finally:
             duration = timer() - start
