@@ -4,7 +4,7 @@ Changelog
 1.10.1 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Drop Python 3.3 support.
 
 
 1.10.0 (2017-12-09)
