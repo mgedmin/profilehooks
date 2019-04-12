@@ -815,11 +815,14 @@ class FuncTimer(object):
         funcname = self.fn.__name__
         filename = self.fn.__code__.co_filename
         lineno = self.fn.__code__.co_firstlineno
-        print("\n  %s (%s:%s):\n"
-              "    %d calls, %.3f seconds (%.3f seconds per call)\n" % (
-                  funcname, filename, lineno, self.ncalls,
-                  self.totaltime, self.totaltime / self.ncalls)
-              )
+        message = "\n %s (%s:%s):\n"\
+            "    %d calls, %.3f seconds (%.3f seconds per call)\n" % (
+                funcname, filename, lineno, self.ncalls,
+                self.totaltime, self.totaltime / self.ncalls)
+        if self.logger:
+            self.logger.log(self.log_level, message)
+        else:
+            print(message)
 
 
 if __name__ == '__main__':
