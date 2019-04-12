@@ -562,18 +562,20 @@ def tearDown(test):
     timeit.default_timer = test.real_time
 
 
-class Bag(object):
-    pass
+if pytest is not None:
+
+    class Bag(object):
+        pass
 
 
-@pytest.yield_fixture(autouse=True)
-def setUpForPyTest(capsys):
-    # NB: we need capsys otherwise our custom sys.stderr wrapper that we set up
-    # in the setUp() call here will be replaced by pytest's own wrapper.
-    bag = Bag()
-    setUp(bag)
-    yield
-    tearDown(bag)
+    @pytest.yield_fixture(autouse=True)
+    def setUpForPyTest(capsys):
+        # NB: we need capsys otherwise our custom sys.stderr wrapper that we set up
+        # in the setUp() call here will be replaced by pytest's own wrapper.
+        bag = Bag()
+        setUp(bag)
+        yield
+        tearDown(bag)
 
 
 def additional_tests():
