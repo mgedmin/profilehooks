@@ -15,6 +15,7 @@ import inspect
 import atexit
 import textwrap
 import timeit
+import logging
 
 try:
     from cStringIO import StringIO
@@ -433,6 +434,70 @@ def doctest_timecall_never_called():
         ...     return x + y * z
 
         >>> run_exitfuncs()
+
+    """
+
+
+def doctest_timecall_to_log_immediate():
+    """Test for timecall.
+
+        >>> logger = logging.getLogger('test_profilehooks')
+        >>> logger.propagate = False
+        >>> logger.level = logging.DEBUG
+        >>> buffer = StringIO()
+        >>> handler = logging.StreamHandler(buffer)
+        >>> logger.addHandler(handler)
+
+        >>> @profilehooks.timecall(log_name='test_profilehooks')
+        ... def sample_fn(x, y, z):
+        ...     print("%s %s %s" % (x, y, z))
+        ...     return x + y * z
+
+        >>> sample_fn(3, 2, 1)
+        3 2 1
+        5
+
+        >>> print(buffer.getvalue().rstrip())
+        sample_fn (<doctest test_profilehooks.doctest_timecall_to_log_immediate[6]>:1):
+            0.000 seconds
+
+        >>> run_exitfuncs()
+
+        >>> del logger.handlers[:]
+
+    """
+
+
+def doctest_timecall_to_log_not_immediate():
+    """Test for timecall.
+
+        >>> logger = logging.getLogger('test_profilehooks')
+        >>> logger.propagate = False
+        >>> logger.level = logging.DEBUG
+        >>> buffer = StringIO()
+        >>> handler = logging.StreamHandler(buffer)
+        >>> logger.addHandler(handler)
+
+        >>> @profilehooks.timecall(log_name='test_profilehooks',
+        ...                        immediate=False)
+        ... def sample_fn(x, y, z):
+        ...     print("%s %s %s" % (x, y, z))
+        ...     return x + y * z
+
+        >>> sample_fn(3, 2, 1)
+        3 2 1
+        5
+
+        >>> print(buffer.getvalue().strip())
+        <BLANKLINE>
+
+        >>> run_exitfuncs()
+
+        >>> print(buffer.getvalue().strip())
+        sample_fn (<doctest test_profilehooks.doctest_timecall_to_log_not_immediate[6]>:1):
+            1 calls, 0.000 seconds (0.000 seconds per call)
+
+        >>> del logger.handlers[:]
 
     """
 
