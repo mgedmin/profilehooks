@@ -1,7 +1,5 @@
 PYTHON = python
 
-SUPPORTED_PYTHON_VERSIONS = 2.7 3.4 3.5 3.6 3.7
-
 FILE_WITH_METADATA = profilehooks.py
 FILE_WITH_VERSION = profilehooks.py
 FILE_WITH_CHANGELOG = CHANGES.rst
@@ -25,17 +23,7 @@ coverage:
 
 .PHONY: test-all-pythons
 test-all-pythons:
-	# poor man's tox -- why not use the real thing instead?
-	set -e; \
-	for ver in $(SUPPORTED_PYTHON_VERSIONS); do \
-		if which python$$ver > /dev/null; then \
-			$(MAKE) test PYTHON=python$$ver; \
-		else \
-			echo "=================================="; \
-			echo "Skipping python$$ver, not available."; \
-			echo "=================================="; \
-		fi; \
-	done
+	tox -p auto
 
 .PHONY: preview-pypi-description
 preview-pypi-description:
