@@ -139,7 +139,9 @@ class TestCoverage(TestCase):
 
             """.format(linenumber)))
 
+
 if profilehooks.hotshot is not None:
+
     class TestCoverageWithHotShot(TestCoverage):
         decorator = staticmethod(profilehooks.coverage_with_hotshot)
 
@@ -559,7 +561,7 @@ def additional_tests():
     return unittest.TestSuite([
         unittest.defaultTestLoader.loadTestsFromName(__name__),
         doctest.DocTestSuite(setUp=setUp, tearDown=tearDown,
-                                optionflags=optionflags),
+                             optionflags=optionflags),
     ])
 
 
@@ -568,4 +570,3 @@ if __name__ == '__main__':
     __name__ = 'test_profilehooks'
     sys.modules[__name__] = sys.modules['__main__']
     unittest.main(defaultTest='additional_tests')
-

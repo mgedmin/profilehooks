@@ -10,6 +10,10 @@ FILE_WITH_CHANGELOG = CHANGES.rst
 default:
 	@echo "Nothing to build here"
 
+.PHONY: flake8
+flake8:
+	flake8 *.py
+
 .PHONY: test check
 test check:
 	$(PYTHON) test_profilehooks.py
