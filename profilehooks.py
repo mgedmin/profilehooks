@@ -706,7 +706,7 @@ class FuncSource:
 
 def timecall(
         fn=None, immediate=True, timer=None,
-        log_name=None, log_level=logging.DEBUG
+        log_name=None, log_level=logging.DEBUG,
 ):
     """Wrap `fn` and print its execution time.
 
@@ -728,12 +728,17 @@ def timecall(
 
         @timecall(timer=time.clock)
 
+    You can also log the output to a logger by specifying the name and level
+    of the logger to use, eg:
+
+        @timecall(immediate=True, log_name='profile_log', log_level=logging.DEBUG)
+
     """
     if fn is None:  # @timecall() syntax -- we are a decorator maker
         def decorator(fn):
             return timecall(
                 fn, immediate=immediate, timer=timer,
-                log_name=log_name, log_level=log_level
+                log_name=log_name, log_level=log_level,
             )
         return decorator
     # @timecall syntax -- we are a decorator.
@@ -741,7 +746,7 @@ def timecall(
         timer = timeit.default_timer
     fp = FuncTimer(
         fn, immediate=immediate, timer=timer,
-        log_name=log_name, log_level=log_level
+        log_name=log_name, log_level=log_level,
     )
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
@@ -759,7 +764,7 @@ class FuncTimer(object):
 
     def __init__(
             self, fn, immediate, timer,
-            log_name=None, log_level=logging.DEBUG
+            log_name=None, log_level=logging.DEBUG,
     ):
         self.logger = None
         if log_name:
@@ -804,7 +809,7 @@ class FuncTimer(object):
                     self.logger.log(self.log_level, message)
                 else:
                     message = "%s (%s:%s):\n    %.3f seconds\n\n" % (
-                        funcname, filename, lineno, duration
+                        funcname, filename, lineno, duration,
                     )
                     sys.stderr.write("\n  " + message)
                     sys.stderr.flush()
