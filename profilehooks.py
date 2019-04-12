@@ -100,6 +100,7 @@ Released under the MIT licence since December 2006:
 
 (Previously it was distributed under the GNU General Public Licence.)
 """
+from __future__ import print_function
 
 __author__ = "Marius Gedminas <marius@gedmin.as>"
 __copyright__ = "Copyright 2004-2017 Marius Gedminas and contributors"
@@ -107,9 +108,9 @@ __license__ = "MIT"
 __version__ = '1.10.1.dev0'
 __date__ = "2017-12-09"
 
-
 import atexit
 import inspect
+import logging
 import os
 import re
 import sys
@@ -703,7 +704,10 @@ class FuncSource:
         return ''.join(lines)
 
 
-def timecall(fn=None, immediate=True, timer=None):
+def timecall(
+        fn=None, immediate=True, timer=None,
+        log_name=None, log_level=logging.DEBUG
+):
     """Wrap `fn` and print its execution time.
 
     Example::
@@ -727,12 +731,18 @@ def timecall(fn=None, immediate=True, timer=None):
     """
     if fn is None:  # @timecall() syntax -- we are a decorator maker
         def decorator(fn):
-            return timecall(fn, immediate=immediate, timer=timer)
+            return timecall(
+                fn, immediate=immediate, timer=timer,
+                log_name=log_name, log_level=log_level
+            )
         return decorator
     # @timecall syntax -- we are a decorator.
     if timer is None:
         timer = timeit.default_timer
-    fp = FuncTimer(fn, immediate=immediate, timer=timer)
+    fp = FuncTimer(
+        fn, immediate=immediate, timer=timer,
+        log_name=log_name, log_level=log_level
+    )
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
 
@@ -747,7 +757,14 @@ def timecall(fn=None, immediate=True, timer=None):
 
 class FuncTimer(object):
 
-    def __init__(self, fn, immediate, timer):
+    def __init__(
+            self, fn, immediate, timer,
+            log_name=None, log_level=logging.DEBUG
+    ):
+        self.logger = None
+        if log_name:
+            self.logger = logging.getLogger(log_name)
+        self.log_level = log_level
         self.fn = fn
         self.ncalls = 0
         self.totaltime = 0
@@ -771,10 +788,26 @@ class FuncTimer(object):
                 funcname = fn.__name__
                 filename = fn.__code__.co_filename
                 lineno = fn.__code__.co_firstlineno
-                sys.stderr.write("\n  %s (%s:%s):\n    %.3f seconds\n\n" % (
-                    funcname, filename, lineno, duration
-                ))
-                sys.stderr.flush()
+                args_str = ', '.join(str(item) for item in args)
+                kw_str = ', '.join(['%s=%s' % (key, value) for key, value in kw.items()])
+                arguments_str = args_str
+                if kw_str:
+                    arguments_str += ', ' + kw_str
+                message = "%s:line %s:%s(%s):%.3f seconds" % (
+                    filename,
+                    lineno,
+                    funcname,
+                    arguments_str,
+                    duration
+                )
+                if self.logger:
+                    self.logger.log(self.log_level, message)
+                else:
+                    message = "%s (%s:%s):\n    %.3f seconds\n\n" % (
+                        funcname, filename, lineno, duration
+                    )
+                    sys.stderr.write("\n  " + message)
+                    sys.stderr.flush()
 
     def atexit(self):
         if not self.ncalls:
