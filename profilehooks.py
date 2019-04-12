@@ -731,7 +731,9 @@ def timecall(
     You can also log the output to a logger by specifying the name and level
     of the logger to use, eg:
 
-        @timecall(immediate=True, log_name='profile_log', log_level=logging.DEBUG)
+        @timecall(immediate=True,
+                  log_name='profile_log',
+                  log_level=logging.DEBUG)
 
     """
     if fn is None:  # @timecall() syntax -- we are a decorator maker
@@ -793,24 +795,12 @@ class FuncTimer(object):
                 funcname = fn.__name__
                 filename = fn.__code__.co_filename
                 lineno = fn.__code__.co_firstlineno
-                args_str = ', '.join(str(item) for item in args)
-                kw_str = ', '.join(['%s=%s' % (key, value) for key, value in kw.items()])
-                arguments_str = args_str
-                if kw_str:
-                    arguments_str += ', ' + kw_str
-                message = "%s:line %s:%s(%s):%.3f seconds" % (
-                    filename,
-                    lineno,
-                    funcname,
-                    arguments_str,
-                    duration
+                message = "%s (%s:%s):\n    %.3f seconds\n\n" % (
+                    funcname, filename, lineno, duration,
                 )
                 if self.logger:
                     self.logger.log(self.log_level, message)
                 else:
-                    message = "%s (%s:%s):\n    %.3f seconds\n\n" % (
-                        funcname, filename, lineno, duration,
-                    )
                     sys.stderr.write("\n  " + message)
                     sys.stderr.flush()
 
@@ -820,7 +810,7 @@ class FuncTimer(object):
         funcname = self.fn.__name__
         filename = self.fn.__code__.co_filename
         lineno = self.fn.__code__.co_firstlineno
-        message = "\n %s (%s:%s):\n"\
+        message = "\n  %s (%s:%s):\n"\
             "    %d calls, %.3f seconds (%.3f seconds per call)\n" % (
                 funcname, filename, lineno, self.ncalls,
                 self.totaltime, self.totaltime / self.ncalls)
