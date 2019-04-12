@@ -22,6 +22,11 @@ try:
 except ImportError:
     from io import StringIO
 
+try:
+    import pytest
+except ImportError:
+    pytest = None
+
 import profilehooks
 
 
@@ -98,13 +103,14 @@ class TestCoverage(TestCase):
         sample_fn = self.decorator(self.sample_fn)
         sample_fn(1, 1, 1)
         sample_fn(1, 2, 3)
+        filename = self.sample_fn.__code__.co_filename
         linenumber = self.sample_fn.__code__.co_firstlineno
         run_exitfuncs()
         self.assertMultiLineEqual(
             sys.stdout.getvalue(),
             '\n' + textwrap.dedent("""\
             *** COVERAGE RESULTS ***
-            sample_fn (test_profilehooks.py:{0})
+            sample_fn ({filename}:{lineno})
             function called 2 times
 
                        def sample_fn(self, x, y, z):
@@ -116,18 +122,19 @@ class TestCoverage(TestCase):
                 1:             return "%s %s %s" % (x, y, z)
 
             1 lines were not executed.
-            """.format(linenumber)))
+            """.format(filename=filename, lineno=linenumber)))
 
     def test_coverage_again(self):
         sample_fn_2 = self.decorator(self.sample_fn_2)
         sample_fn_2()
+        filename = self.sample_fn_2.__code__.co_filename
         linenumber = self.sample_fn_2.__code__.co_firstlineno
         run_exitfuncs()
         self.assertMultiLineEqual(
             sys.stdout.getvalue(),
             '\n' + textwrap.dedent("""\
             *** COVERAGE RESULTS ***
-            sample_fn_2 (test_profilehooks.py:{0})
+            sample_fn_2 ({filename}:{lineno})
             function called 1 times
 
                        def sample_fn_2(self):
@@ -137,7 +144,7 @@ class TestCoverage(TestCase):
                 1:             x = 5
                 1:         del x
 
-            """.format(linenumber)))
+            """.format(filename=filename, lineno=linenumber)))
 
 
 if profilehooks.hotshot is not None:
@@ -555,6 +562,20 @@ def tearDown(test):
     timeit.default_timer = test.real_time
 
 
+class Bag(object):
+    pass
+
+
+@pytest.yield_fixture(autouse=True)
+def setUpForPyTest(capsys):
+    # NB: we need capsys otherwise our custom sys.stderr wrapper that we set up
+    # in the setUp() call here will be replaced by pytest's own wrapper.
+    bag = Bag()
+    setUp(bag)
+    yield
+    tearDown(bag)
+
+
 def additional_tests():
     optionflags = (doctest.REPORT_ONLY_FIRST_FAILURE |
                    doctest.ELLIPSIS)
@@ -566,7 +587,7 @@ def additional_tests():
 
 
 if __name__ == '__main__':
-    # a bit pointless: __name__ is different and thus all tests will fail
+    # Haaack!  We overwrite: __name__ so that tests will not fail
     __name__ = 'test_profilehooks'
     sys.modules[__name__] = sys.modules['__main__']
     unittest.main(defaultTest='additional_tests')
