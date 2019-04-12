@@ -1,8 +1,11 @@
 Changelog
 =========
 
-1.10.1 (unreleased)
+1.11.0 (unreleased)
 -------------------
+
+- New options: ``@timecall(log_name='logger', log_level=DEBUG)``.
+  https://github.com/mgedmin/profilehooks/pull/20.
 
 - Add Python 3.7 support.
 

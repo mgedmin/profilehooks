@@ -74,7 +74,7 @@ Caveats
   executed.  For this reason coverage analysis now uses trace.py which is
   slower, but more accurate.
 
-Copyright (c) 2004--2017 Marius Gedminas <marius@gedmin.as>
+Copyright (c) 2004--2019 Marius Gedminas <marius@gedmin.as>
 Copyright (c) 2007 Hanno Schlichting
 Copyright (c) 2008 Florian Schulze
 
@@ -103,10 +103,10 @@ Released under the MIT licence since December 2006:
 from __future__ import print_function
 
 __author__ = "Marius Gedminas <marius@gedmin.as>"
-__copyright__ = "Copyright 2004-2017 Marius Gedminas and contributors"
+__copyright__ = "Copyright 2004-2019 Marius Gedminas and contributors"
 __license__ = "MIT"
-__version__ = '1.10.1.dev0'
-__date__ = "2017-12-09"
+__version__ = '1.11.0.dev0'
+__date__ = "2019-04-12"
 
 import atexit
 import inspect
