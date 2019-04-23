@@ -9,7 +9,7 @@ Changelog
 
 - Add Python 3.7 support.
 
-- Drop Python 3.3 support.
+- Drop Python 3.3 and 3.4 support.
 
 
 1.10.0 (2017-12-09)
