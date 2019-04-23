@@ -10,3 +10,6 @@ include .coveragerc
 
 # added by check_manifest.py
 include *.mk
+
+# added by check_manifest.py
+include pytest.ini

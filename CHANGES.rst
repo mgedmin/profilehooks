@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.11.0 (unreleased)
+1.11.0 (2019-04-23)
 -------------------
 
 - New options: ``@timecall(log_name='logger', log_level=DEBUG)``.
