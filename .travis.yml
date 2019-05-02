@@ -6,8 +6,8 @@ python:
   - 3.6
   - 3.7
   - nightly
-  - pypy2.7-6.0.0
-  - pypy3.5-6.0.0
+  - pypy
+  - pypy3
 matrix:
   include:
     - name: flake8
