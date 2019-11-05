@@ -475,6 +475,34 @@ def doctest_timecall_to_log_immediate():
         >>> del logger.handlers[:]
 
     """
+def doctest_timecall_disable():
+    """Test for timecall.
+
+        >>> logger = logging.getLogger('test_profilehooks')
+        >>> logger.propagate = False
+        >>> logger.level = logging.DEBUG
+        >>> buffer = StringIO()
+        >>> handler = logging.StreamHandler(buffer)
+        >>> logger.addHandler(handler)
+
+        >>> @profilehooks.timecall(log_name='test_profilehooks', enable=False)
+        ... def sample_fn(x, y, z):
+        ...     print("%s %s %s" % (x, y, z))
+        ...     return x + y * z
+
+        >>> sample_fn(3, 2, 1)
+        3 2 1
+        5
+
+        >>> print(buffer.getvalue().rstrip())
+        sample_fn (<doctest doctest_timecall_disable[6]>:1):
+            0.000 seconds
+
+        >>> run_exitfuncs()
+
+        >>> del logger.handlers[:]
+
+    """
 
 
 def doctest_timecall_to_log_not_immediate():

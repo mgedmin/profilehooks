@@ -707,6 +707,7 @@ class FuncSource:
 def timecall(
         fn=None, immediate=True, timer=None,
         log_name=None, log_level=logging.DEBUG,
+        enable=True
 ):
     """Wrap `fn` and print its execution time.
 
@@ -735,12 +736,16 @@ def timecall(
                   log_name='profile_log',
                   log_level=logging.DEBUG)
 
+    You can also enable or disable eg:
+        @timecall(enable=False)
+
     """
+
     if fn is None:  # @timecall() syntax -- we are a decorator maker
         def decorator(fn):
             return timecall(
                 fn, immediate=immediate, timer=timer,
-                log_name=log_name, log_level=log_level,
+                log_name=log_name, log_level=log_level, enable=enable
             )
         return decorator
     # @timecall syntax -- we are a decorator.
@@ -748,7 +753,7 @@ def timecall(
         timer = timeit.default_timer
     fp = FuncTimer(
         fn, immediate=immediate, timer=timer,
-        log_name=log_name, log_level=log_level,
+        log_name=log_name, log_level=log_level, enable=enable
     )
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
@@ -766,7 +771,7 @@ class FuncTimer(object):
 
     def __init__(
             self, fn, immediate, timer,
-            log_name=None, log_level=logging.DEBUG,
+            log_name=None, log_level=logging.DEBUG, enable=True
     ):
         self.logger = None
         if log_name:
@@ -777,6 +782,7 @@ class FuncTimer(object):
         self.totaltime = 0
         self.immediate = immediate
         self.timer = timer
+        self.enable = enable
         if not immediate:
             atexit.register(self.atexit)
 
@@ -789,23 +795,24 @@ class FuncTimer(object):
         try:
             return fn(*args, **kw)
         finally:
-            duration = timer() - start
-            self.totaltime += duration
-            if self.immediate:
-                funcname = fn.__name__
-                filename = fn.__code__.co_filename
-                lineno = fn.__code__.co_firstlineno
-                message = "%s (%s:%s):\n    %.3f seconds\n\n" % (
-                    funcname, filename, lineno, duration,
-                )
-                if self.logger:
-                    self.logger.log(self.log_level, message)
-                else:
-                    sys.stderr.write("\n  " + message)
-                    sys.stderr.flush()
+            if not self.enable:
+                duration = timer() - start
+                self.totaltime += duration
+                if self.immediate:
+                    funcname = fn.__name__
+                    filename = fn.__code__.co_filename
+                    lineno = fn.__code__.co_firstlineno
+                    message = "%s (%s:%s):\n    %.3f seconds\n\n" % (
+                        funcname, filename, lineno, duration,
+                    )
+                    if self.logger:
+                        self.logger.log(self.log_level, message)
+                    else:
+                        sys.stderr.write("\n  " + message)
+                        sys.stderr.flush()
 
     def atexit(self):
-        if not self.ncalls:
+        if not self.ncalls and not self.enable:
             return
         funcname = self.fn.__name__
         filename = self.fn.__code__.co_filename
