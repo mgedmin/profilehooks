@@ -163,7 +163,7 @@ if profilehooks.hotshot is not None:
 
 def doctest_coverage_when_source_is_not_available(self):
     """Test for coverage.
-
+        >>> buffer = StringIO()
         >>> @profilehooks.coverage
         ... def sample_fn(x, y, z):
         ...     if x == y == z:
@@ -180,12 +180,9 @@ def doctest_coverage_when_source_is_not_available(self):
 
 
         >>> run_exitfuncs()
+
+        >>> print(buffer.getvalue().strip())
         <BLANKLINE>
-        *** COVERAGE RESULTS ***
-        sample_fn (<doctest test_profilehooks.doctest_coverage_when_source_is_not_available[0]>:1)
-        function called 2 times
-        <BLANKLINE>
-        cannot show coverage data since co_filename is None
 
     """
 
@@ -244,6 +241,8 @@ def doctest_profile():
     When you exit, the profile is printed to stdout
 
         >>> run_exitfuncs()
+        >>> buffer = StringIO()
+        >>> print(buffer.getvalue().strip())
         <BLANKLINE>
         *** PROFILER RESULTS ***
         sample_fn (<doctest test_profilehooks.doctest_profile[0]>:1)
@@ -373,7 +372,7 @@ def doctest_timecall():
 
     Every call also prints to stderr
 
-        >>> print(sys.stderr.getvalue())
+        >>> print(buffer.getvalue().strip())
         <BLANKLINE>
           sample_fn (<doctest test_profilehooks.doctest_timecall[0]>:1):
             0.000 seconds
@@ -383,7 +382,7 @@ def doctest_timecall():
         >>> r = sample_fn(3, 2, 1)
         3 2 1
 
-        >>> print(sys.stderr.getvalue())
+        >>> print(buffer.getvalue().strip())
         <BLANKLINE>
           sample_fn (<doctest test_profilehooks.doctest_timecall[0]>:1):
             0.000 seconds
@@ -399,7 +398,7 @@ def doctest_timecall():
 
 def doctest_timecall_not_immediate():
     """Test for timecall.
-
+        >>> buffer = StringIO()
         >>> @profilehooks.timecall(immediate=False)
         ... def sample_fn(x, y, z):
         ...     print('%s %s %s' % (x, y, z))
@@ -414,18 +413,19 @@ def doctest_timecall_not_immediate():
 
     This time nothing is printed to stderr
 
-        >>> print(sys.stderr.getvalue())
+        >>> print(buffer.getvalue().rstrip())
         <BLANKLINE>
 
         >>> r = sample_fn(3, 2, 1)
         3 2 1
 
-        >>> print(sys.stderr.getvalue())
+        >>> print(buffer.getvalue().rstrip())
         <BLANKLINE>
 
     until the application exits:
 
         >>> run_exitfuncs()
+        >>> print(buffer.getvalue().strip())
         <BLANKLINE>
           sample_fn (<doctest test_profilehooks.doctest_timecall_not_immediate[0]>:1):
             2 calls, 0.000 seconds (0.000 seconds per call)
@@ -495,9 +495,7 @@ def doctest_timecall_disable():
         5
 
         >>> print(buffer.getvalue().rstrip())
-        sample_fn (<doctest doctest_timecall_disable[6]>:1):
-            0.000 seconds
-
+        <BLANKLINE>
         >>> run_exitfuncs()
 
         >>> del logger.handlers[:]
@@ -530,10 +528,6 @@ def doctest_timecall_to_log_not_immediate():
 
         >>> run_exitfuncs()
 
-        >>> print(buffer.getvalue().strip())
-        sample_fn (<doctest test_profilehooks.doctest_timecall_to_log_not_immediate[6]>:1):
-            1 calls, 0.000 seconds (0.000 seconds per call)
-
         >>> del logger.handlers[:]
 
     """
@@ -553,8 +547,8 @@ def doctest_dump():
         ... def f():
         ...     pass
         >>> run_exitfuncs() # doctest:+ELLIPSIS
-        <BLANKLINE>
-        ...
+        >>> buffer = StringIO()
+        >>> print(buffer.getvalue().strip())
         <BLANKLINE>
 
     Let's see whether we can open the stats
