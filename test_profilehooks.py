@@ -29,7 +29,6 @@ except ImportError:
 
 import profilehooks
 
-
 _exitfuncs = []
 
 
@@ -47,11 +46,11 @@ def skipIf(condition, reason):
         if condition:
             fn.__doc__ = 'Test skipped: %s' % reason
         return fn
+
     return decorator
 
 
 class TestCase(unittest.TestCase):
-
     maxDiff = None
 
     def setUp(self):
@@ -81,7 +80,7 @@ class TestCoverage(TestCase):
 
     def sample_fn(self, x, y, z):
         if x == y == z:
-            return "%s" % (x, )
+            return "%s" % (x,)
         elif x == y:
             return "%s %s" % (x, z)
         else:
@@ -163,7 +162,7 @@ if profilehooks.hotshot is not None:
 
 def doctest_coverage_when_source_is_not_available(self):
     """Test for coverage.
-        >>> buffer = StringIO()
+
         >>> @profilehooks.coverage
         ... def sample_fn(x, y, z):
         ...     if x == y == z:
@@ -180,9 +179,12 @@ def doctest_coverage_when_source_is_not_available(self):
 
 
         >>> run_exitfuncs()
-
-        >>> print(buffer.getvalue().strip())
         <BLANKLINE>
+        *** COVERAGE RESULTS ***
+        sample_fn (<doctest test_profilehooks.doctest_coverage_when_source_is_not_available[0]>:1)
+        function called 2 times
+        <BLANKLINE>
+        cannot show coverage data since co_filename is None
 
     """
 
@@ -241,8 +243,6 @@ def doctest_profile():
     When you exit, the profile is printed to stdout
 
         >>> run_exitfuncs()
-        >>> buffer = StringIO()
-        >>> print(buffer.getvalue().strip())
         <BLANKLINE>
         *** PROFILER RESULTS ***
         sample_fn (<doctest test_profilehooks.doctest_profile[0]>:1)
@@ -372,7 +372,7 @@ def doctest_timecall():
 
     Every call also prints to stderr
 
-        >>> print(buffer.getvalue().strip())
+        >>> print(sys.stderr.getvalue())
         <BLANKLINE>
           sample_fn (<doctest test_profilehooks.doctest_timecall[0]>:1):
             0.000 seconds
@@ -382,7 +382,7 @@ def doctest_timecall():
         >>> r = sample_fn(3, 2, 1)
         3 2 1
 
-        >>> print(buffer.getvalue().strip())
+        >>> print(sys.stderr.getvalue())
         <BLANKLINE>
           sample_fn (<doctest test_profilehooks.doctest_timecall[0]>:1):
             0.000 seconds
@@ -398,7 +398,7 @@ def doctest_timecall():
 
 def doctest_timecall_not_immediate():
     """Test for timecall.
-        >>> buffer = StringIO()
+
         >>> @profilehooks.timecall(immediate=False)
         ... def sample_fn(x, y, z):
         ...     print('%s %s %s' % (x, y, z))
@@ -413,19 +413,18 @@ def doctest_timecall_not_immediate():
 
     This time nothing is printed to stderr
 
-        >>> print(buffer.getvalue().rstrip())
+        >>> print(sys.stderr.getvalue())
         <BLANKLINE>
 
         >>> r = sample_fn(3, 2, 1)
         3 2 1
 
-        >>> print(buffer.getvalue().rstrip())
+        >>> print(sys.stderr.getvalue())
         <BLANKLINE>
 
     until the application exits:
 
         >>> run_exitfuncs()
-        >>> print(buffer.getvalue().strip())
         <BLANKLINE>
           sample_fn (<doctest test_profilehooks.doctest_timecall_not_immediate[0]>:1):
             2 calls, 0.000 seconds (0.000 seconds per call)
@@ -475,32 +474,6 @@ def doctest_timecall_to_log_immediate():
         >>> del logger.handlers[:]
 
     """
-def doctest_timecall_disable():
-    """Test for timecall.
-
-        >>> logger = logging.getLogger('test_profilehooks')
-        >>> logger.propagate = False
-        >>> logger.level = logging.DEBUG
-        >>> buffer = StringIO()
-        >>> handler = logging.StreamHandler(buffer)
-        >>> logger.addHandler(handler)
-
-        >>> @profilehooks.timecall(log_name='test_profilehooks', enable=False)
-        ... def sample_fn(x, y, z):
-        ...     print("%s %s %s" % (x, y, z))
-        ...     return x + y * z
-
-        >>> sample_fn(3, 2, 1)
-        3 2 1
-        5
-
-        >>> print(buffer.getvalue().rstrip())
-        <BLANKLINE>
-        >>> run_exitfuncs()
-
-        >>> del logger.handlers[:]
-
-    """
 
 
 def doctest_timecall_to_log_not_immediate():
@@ -528,6 +501,42 @@ def doctest_timecall_to_log_not_immediate():
 
         >>> run_exitfuncs()
 
+        >>> print(buffer.getvalue().strip())
+        sample_fn (<doctest test_profilehooks.doctest_timecall_to_log_not_immediate[6]>:1):
+            1 calls, 0.000 seconds (0.000 seconds per call)
+
+        >>> del logger.handlers[:]
+
+    """
+
+
+def doctest_timecall_disabled():
+    """
+        >>> logger = logging.getLogger('test_profilehooks')
+        >>> logger.propagate = False
+        >>> logger.level = logging.DEBUG
+        >>> buffer = StringIO()
+        >>> handler = logging.StreamHandler(buffer)
+        >>> logger.addHandler(handler)
+
+        >>> @profilehooks.timecall(log_name='test_profilehooks',
+        ...                        enable=False)
+        ... def sample_fn(x, y, z):
+        ...     print("%s %s %s" % (x, y, z))
+        ...     return x + y * z
+
+        >>> sample_fn(3, 2, 1)
+        3 2 1
+        5
+
+        >>> print(buffer.getvalue().strip())
+        <BLANKLINE>
+
+        >>> run_exitfuncs()
+
+        >>> print(buffer.getvalue().strip())
+        <BLANKLINE>
+
         >>> del logger.handlers[:]
 
     """
@@ -547,8 +556,8 @@ def doctest_dump():
         ... def f():
         ...     pass
         >>> run_exitfuncs() # doctest:+ELLIPSIS
-        >>> buffer = StringIO()
-        >>> print(buffer.getvalue().strip())
+        <BLANKLINE>
+        ...
         <BLANKLINE>
 
     Let's see whether we can open the stats
@@ -585,9 +594,9 @@ def tearDown(test):
 
 
 if pytest is not None:
-
     class Bag(object):
         pass
+
 
     @pytest.yield_fixture(autouse=True)
     def setUpForPyTest(capsys):

@@ -105,7 +105,7 @@ from __future__ import print_function
 __author__ = "Marius Gedminas <marius@gedmin.as>"
 __copyright__ = "Copyright 2004-2019 Marius Gedminas and contributors"
 __license__ = "MIT"
-__version__ = '1.11.0'
+__version__ = '1.11.1.dev0'
 __date__ = "2019-04-23"
 
 import atexit
@@ -740,7 +740,8 @@ def timecall(
         @timecall(immediate=True,
                   log_name='profile_log',
                   log_level=logging.DEBUG)
-
+    You can also enable or disable by doing:
+        @timecall(enable=False)
     """
     if fn is None:  # @timecall() syntax -- we are a decorator maker
         def decorator(fn):
