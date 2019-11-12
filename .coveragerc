@@ -1,5 +1,4 @@
 [run]
-source = profilehooks
 
 [report]
 exclude_lines =

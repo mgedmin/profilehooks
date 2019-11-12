@@ -17,7 +17,7 @@ jobs:
 install:
   - pip install coverage coveralls
 script:
-  - coverage run test_profilehooks.py
+  - coverage run --source=profilehooks test_profilehooks.py
   - coverage report -m
 after_success:
   - coveralls
