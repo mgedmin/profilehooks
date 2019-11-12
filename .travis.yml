@@ -1,5 +1,4 @@
 language: python
-dist: xenial
 python:
   - 2.7
   - 3.5
@@ -9,7 +8,7 @@ python:
   - nightly
   - pypy
   - pypy3
-matrix:
+jobs:
   include:
     - name: flake8
       install: pip install flake8
@@ -18,7 +17,8 @@ matrix:
 install:
   - pip install coverage coveralls
 script:
-  - coverage run --source=profilehooks test_profilehooks.py
+  - coverage run test_profilehooks.py
+  - coverage report -m --fail-under=100
 after_success:
   - coveralls
 notifications:
