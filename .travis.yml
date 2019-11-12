@@ -18,7 +18,7 @@ install:
   - pip install coverage coveralls
 script:
   - coverage run test_profilehooks.py
-  - coverage report -m --fail-under=100
+  - coverage report -m
 after_success:
   - coveralls
 notifications:
