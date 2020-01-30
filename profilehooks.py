@@ -132,7 +132,6 @@ try:
 except ImportError:
     cProfile = None
 
-
 # registry of available profilers
 AVAILABLE_PROFILERS = {}
 
@@ -209,6 +208,7 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
                            immediate=immediate, dirs=dirs,
                            sort=sort, entries=entries,
                            profiler=profiler, stdout=stdout)
+
         return decorator
     # @profile syntax -- we are a decorator.
     if isinstance(profiler, str):
@@ -223,11 +223,13 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
     fp = profiler_class(fn, skip=skip, filename=filename,
                         immediate=immediate, dirs=dirs,
                         sort=sort, entries=entries, stdout=stdout)
+
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
 
     def new_fn(*args, **kw):
         return fp(*args, **kw)
+
     new_fn.__doc__ = fn.__doc__
     new_fn.__name__ = fn.__name__
     new_fn.__dict__ = fn.__dict__
@@ -255,11 +257,13 @@ def coverage(fn):
 
     """
     fp = TraceFuncCoverage(fn)  # or HotShotFuncCoverage
+
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
 
     def new_fn(*args, **kw):
         return fp(*args, **kw)
+
     new_fn.__doc__ = fn.__doc__
     new_fn.__name__ = fn.__name__
     new_fn.__dict__ = fn.__dict__
@@ -277,11 +281,13 @@ def coverage_with_hotshot(fn):
     See the docstring of `coverage` for usage examples.
     """
     fp = HotShotFuncCoverage(fn)
+
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
 
     def new_fn(*args, **kw):
         return fp(*args, **kw)
+
     new_fn.__doc__ = fn.__doc__
     new_fn.__name__ = fn.__name__
     new_fn.__dict__ = fn.__dict__
@@ -315,7 +321,7 @@ class FuncProfile(object):
         self.dirs = dirs
         self.sort = sort or ('cumulative', 'time', 'calls')
         if isinstance(self.sort, str):
-            self.sort = (self.sort, )
+            self.sort = (self.sort,)
         self.entries = entries
         self.reset_stats()
         if not self.immediate:
@@ -388,16 +394,14 @@ class FuncProfile(object):
 
 AVAILABLE_PROFILERS['profile'] = FuncProfile
 
-
 if cProfile is not None:
-
     class CProfileFuncProfile(FuncProfile):
         """Profiler for a function (uses cProfile)."""
 
         Profile = cProfile.Profile
 
-    AVAILABLE_PROFILERS['cProfile'] = CProfileFuncProfile
 
+    AVAILABLE_PROFILERS['cProfile'] = CProfileFuncProfile
 
 if hotshot is not None:
 
@@ -462,7 +466,9 @@ if hotshot is not None:
             self.ncalls = 0
             self.skipped = 0
 
+
     AVAILABLE_PROFILERS['hotshot'] = HotShotFuncProfile
+
 
     class HotShotFuncCoverage:
         """Coverage analysis for a function (uses _hotshot).
@@ -696,7 +702,7 @@ class FuncSource:
 
 def timecall(
         fn=None, immediate=True, timer=None,
-        log_name=None, log_level=logging.DEBUG,
+        log_name=None, log_level=logging.DEBUG, enable=True
 ):
     """Wrap `fn` and print its execution time.
 
@@ -724,27 +730,31 @@ def timecall(
         @timecall(immediate=True,
                   log_name='profile_log',
                   log_level=logging.DEBUG)
-
+    You can also enable or disable by doing:
+        @timecall(enable=False)
     """
     if fn is None:  # @timecall() syntax -- we are a decorator maker
         def decorator(fn):
             return timecall(
                 fn, immediate=immediate, timer=timer,
-                log_name=log_name, log_level=log_level,
+                log_name=log_name, log_level=log_level, enable=enable
             )
+
         return decorator
     # @timecall syntax -- we are a decorator.
     if timer is None:
         timer = timeit.default_timer
     fp = FuncTimer(
         fn, immediate=immediate, timer=timer,
-        log_name=log_name, log_level=log_level,
+        log_name=log_name, log_level=log_level, enable=enable
     )
+
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
 
     def new_fn(*args, **kw):
         return fp(*args, **kw)
+
     new_fn.__doc__ = fn.__doc__
     new_fn.__name__ = fn.__name__
     new_fn.__dict__ = fn.__dict__
@@ -756,7 +766,7 @@ class FuncTimer(object):
 
     def __init__(
             self, fn, immediate, timer,
-            log_name=None, log_level=logging.DEBUG,
+            log_name=None, log_level=logging.DEBUG, enable=True
     ):
         self.logger = None
         if log_name:
@@ -767,43 +777,47 @@ class FuncTimer(object):
         self.totaltime = 0
         self.immediate = immediate
         self.timer = timer
+        self.enable = enable
         if not immediate:
             atexit.register(self.atexit)
 
     def __call__(self, *args, **kw):
         """Profile a singe call to the function."""
         fn = self.fn
+        if not self.enable:
+            return fn(*args, **kw)
         timer = self.timer
         self.ncalls += 1
         start = timer()
         try:
             return fn(*args, **kw)
         finally:
-            duration = timer() - start
-            self.totaltime += duration
-            if self.immediate:
-                funcname = fn.__name__
-                filename = fn.__code__.co_filename
-                lineno = fn.__code__.co_firstlineno
-                message = "%s (%s:%s):\n    %.3f seconds\n\n" % (
-                    funcname, filename, lineno, duration,
-                )
-                if self.logger:
-                    self.logger.log(self.log_level, message)
-                else:
-                    sys.stderr.write("\n  " + message)
-                    sys.stderr.flush()
+            if self.enable:
+                duration = timer() - start
+                self.totaltime += duration
+                if self.immediate:
+                    funcname = fn.__name__
+                    filename = fn.__code__.co_filename
+                    lineno = fn.__code__.co_firstlineno
+                    message = "%s (%s:%s):\n    %.3f seconds\n\n" % (
+                        funcname, filename, lineno, duration,
+                    )
+                    if self.logger:
+                        self.logger.log(self.log_level, message)
+                    else:
+                        sys.stderr.write("\n  " + message)
+                        sys.stderr.flush()
 
     def atexit(self):
-        if not self.ncalls:
+        if not self.ncalls and not self.enable:
             return
         funcname = self.fn.__name__
         filename = self.fn.__code__.co_filename
         lineno = self.fn.__code__.co_firstlineno
-        message = "\n  %s (%s:%s):\n"\
-            "    %d calls, %.3f seconds (%.3f seconds per call)\n" % (
-                funcname, filename, lineno, self.ncalls,
-                self.totaltime, self.totaltime / self.ncalls)
+        message = "\n  %s (%s:%s):\n" \
+                  "    %d calls, %.3f seconds (%.3f seconds per call)\n" % (
+                      funcname, filename, lineno, self.ncalls,
+                      self.totaltime, self.totaltime / self.ncalls)
         if self.logger:
             self.logger.log(self.log_level, message)
         else:
@@ -820,14 +834,17 @@ Injected `profilehooks`
 ********
 """.format("\n".join(local.keys()))
 
+
     def interact_():
         from code import interact
         interact(message, local=local)
+
 
     def run_():
         from runpy import run_module
         print(message)
         run_module(sys.argv[1], init_globals=local)
+
 
     if len(sys.argv) == 1:
         interact_()

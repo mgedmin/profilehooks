@@ -29,7 +29,6 @@ except ImportError:
 
 import profilehooks
 
-
 _exitfuncs = []
 
 
@@ -47,11 +46,11 @@ def skipIf(condition, reason):
         if condition:
             fn.__doc__ = 'Test skipped: %s' % reason
         return fn
+
     return decorator
 
 
 class TestCase(unittest.TestCase):
-
     maxDiff = None
 
     def setUp(self):
@@ -81,7 +80,7 @@ class TestCoverage(TestCase):
 
     def sample_fn(self, x, y, z):
         if x == y == z:
-            return "%s" % (x, )
+            return "%s" % (x,)
         elif x == y:
             return "%s %s" % (x, z)
         else:
@@ -511,6 +510,38 @@ def doctest_timecall_to_log_not_immediate():
     """
 
 
+def doctest_timecall_disabled():
+    """
+        >>> logger = logging.getLogger('test_profilehooks')
+        >>> logger.propagate = False
+        >>> logger.level = logging.DEBUG
+        >>> buffer = StringIO()
+        >>> handler = logging.StreamHandler(buffer)
+        >>> logger.addHandler(handler)
+
+        >>> @profilehooks.timecall(log_name='test_profilehooks',
+        ...                        enable=False)
+        ... def sample_fn(x, y, z):
+        ...     print("%s %s %s" % (x, y, z))
+        ...     return x + y * z
+
+        >>> sample_fn(3, 2, 1)
+        3 2 1
+        5
+
+        >>> print(buffer.getvalue().strip())
+        <BLANKLINE>
+
+        >>> run_exitfuncs()
+
+        >>> print(buffer.getvalue().strip())
+        <BLANKLINE>
+
+        >>> del logger.handlers[:]
+
+    """
+
+
 def doctest_dump():
     """Test that profiling can save the stats in a file.
 
@@ -563,9 +594,9 @@ def tearDown(test):
 
 
 if pytest is not None:
-
     class Bag(object):
         pass
+
 
     @pytest.yield_fixture(autouse=True)
     def setUpForPyTest(capsys):
