@@ -34,6 +34,7 @@ preview-pypi-description:
 .PHONY: releasechecklist
 releasechecklist: check-date  # also release.mk will add other checks
 
+DISTCHECK_DIFF_OPTS = $(DISTCHECK_DIFF_DEFAULT_OPTS) -x .github
 include release.mk
 
 .PHONY: check-date
