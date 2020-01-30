@@ -6,6 +6,9 @@ Changelog
 
 - Add support for Python 3.8.
 
+- Detect Python source file encoding correctly in ``@coverage``.
+  https://github.com/mgedmin/profilehooks/issues/24.
+
 
 1.11.0 (2019-04-23)
 -------------------

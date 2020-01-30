@@ -7,7 +7,7 @@ coverage reports.  There's a third convenient decorator (`timecall`) that
 measures the duration of function execution without the extra profiling
 overhead.
 
-Usage example (Python 2.4 or newer)::
+Usage example::
 
     from profilehooks import profile, coverage
 
@@ -28,20 +28,6 @@ Or without imports, with some hack
         else: return n * fn(n-1)
 
     print(fn(42))
-
-
-Usage example (Python 2.3 or older)::
-
-    from profilehooks import profile, coverage
-
-    def fn(n):
-        if n < 2: return 1
-        else: return n * fn(n-1)
-
-    # Now wrap that function in a decorator
-    fn = profile(fn) # or coverage(fn)
-
-    print fn(42)
 
 Reports for all thusly decorated functions will be printed to sys.stdout
 on program termination.  You can alternatively request for immediate
@@ -151,6 +137,10 @@ except ImportError:
 AVAILABLE_PROFILERS = {}
 
 __all__ = ['coverage', 'coverage_with_hotshot', 'profile', 'timecall']
+
+
+# Use tokenize.open() on Python >= 3.2, fall back to open() on Python 2
+tokenize_open = getattr(tokenize, 'open', open)
 
 
 def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
@@ -653,7 +643,7 @@ class FuncSource:
         # Python 3.2 and removed in 3.6.
         strs = set()
         prev = token.INDENT  # so module docstring is detected as docstring
-        with open(filename) as f:
+        with tokenize_open(filename) as f:
             tokens = tokenize.generate_tokens(f.readline)
             for ttype, tstr, start, end, line in tokens:
                 if ttype == token.STRING and prev == token.INDENT:
