@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.11.2 (unreleased)
+1.11.2 (2020-03-03)
 -------------------
 
 - Fix breakage with `@functools.lru_cache()`:
