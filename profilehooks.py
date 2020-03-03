@@ -144,6 +144,24 @@ __all__ = ['coverage', 'coverage_with_hotshot', 'profile', 'timecall']
 tokenize_open = getattr(tokenize, 'open', open)
 
 
+def _unwrap(fn):
+    # inspect.unwrap() doesn't exist on Python 2
+    if not hasattr(fn, '__wrapped__'):
+        return fn
+    else:
+        # intentionally using recursion here instead of a while loop to
+        # make cycles fail with a recursion error instead of looping forever.
+        return _unwrap(fn.__wrapped__)
+
+
+def _identify(fn):
+    fn = _unwrap(fn)
+    funcname = fn.__name__
+    filename = fn.__code__.co_filename
+    lineno = fn.__code__.co_firstlineno
+    return (funcname, filename, lineno)
+
+
 def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
             sort=None, entries=40,
             profiler=('cProfile', 'profile', 'hotshot'),
@@ -346,9 +364,7 @@ class FuncProfile(object):
         if self.filename:
             stats.dump_stats(self.filename)
         if self.stdout:
-            funcname = self.fn.__name__
-            filename = self.fn.__code__.co_filename
-            lineno = self.fn.__code__.co_firstlineno
+            funcname, filename, lineno = _identify(self.fn)
             print("")
             print("*** PROFILER RESULTS ***")
             print("%s (%s:%s)" % (funcname, filename, lineno))
@@ -498,9 +514,7 @@ if hotshot is not None:
             This function is registered as an atexit hook.
             """
             self.profiler.close()
-            funcname = self.fn.__name__
-            filename = self.fn.__code__.co_filename
-            lineno = self.fn.__code__.co_firstlineno
+            funcname, filename, lineno = _identify(self.fn)
             print("")
             print("*** COVERAGE RESULTS ***")
             print("%s (%s:%s)" % (funcname, filename, lineno))
@@ -578,9 +592,7 @@ class TraceFuncCoverage:
 
         This function is registered as an atexit hook.
         """
-        funcname = self.fn.__name__
-        filename = self.fn.__code__.co_filename
-        lineno = self.fn.__code__.co_firstlineno
+        funcname, filename, lineno = _identify(self.fn)
         print("")
         print("*** COVERAGE RESULTS ***")
         print("%s (%s:%s)" % (funcname, filename, lineno))
@@ -620,8 +632,11 @@ class FuncSource:
         if self.filename is None:
             return
         strs = self._find_docstrings(self.filename)
-        lines = {ln for off, ln in dis.findlinestarts(self.fn.__code__)
-                 if ln not in strs}
+        lines = {
+            ln
+            for off, ln in dis.findlinestarts(_unwrap(self.fn).__code__)
+            if ln not in strs
+        }
         for lineno in lines:
             self.sourcelines.setdefault(lineno, 0)
         if lines:
@@ -771,9 +786,7 @@ class FuncTimer(object):
             duration = timer() - start
             self.totaltime += duration
             if self.immediate:
-                funcname = fn.__name__
-                filename = fn.__code__.co_filename
-                lineno = fn.__code__.co_firstlineno
+                funcname, filename, lineno = _identify(fn)
                 message = "%s (%s:%s):\n    %.3f seconds\n\n" % (
                     funcname, filename, lineno, duration,
                 )
@@ -786,9 +799,7 @@ class FuncTimer(object):
     def atexit(self):
         if not self.ncalls:
             return
-        funcname = self.fn.__name__
-        filename = self.fn.__code__.co_filename
-        lineno = self.fn.__code__.co_firstlineno
+        funcname, filename, lineno = _identify(self.fn)
         message = "\n  %s (%s:%s):\n"\
             "    %d calls, %.3f seconds (%.3f seconds per call)\n" % (
                 funcname, filename, lineno, self.ncalls,

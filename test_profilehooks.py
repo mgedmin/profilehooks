@@ -7,15 +7,16 @@ They are woefully incomplete.
 Run it with python setup.py test
 """
 
+import atexit
+import doctest
+import functools
+import inspect
+import logging
 import os
 import sys
-import doctest
-import unittest
-import inspect
-import atexit
 import textwrap
 import timeit
-import logging
+import unittest
 
 try:
     from cStringIO import StringIO
@@ -445,6 +446,40 @@ def doctest_timecall_never_called():
         >>> run_exitfuncs()
 
     """
+
+
+if hasattr('functools', 'lru_cache'):
+    # Python 2.7 doesn't have functools.lru_cache
+
+    def doctest_timecall_on_lru_cache():
+        """Test for timecall.
+
+        This is a regression test for
+        https://github.com/mgedmin/profilehooks/issues/25.
+
+            >>> @profilehooks.timecall
+            ... @functools.lru_cache()
+            ... def sample_fn(x, y, z):
+            ...     print("%s %s %s" % (x, y, z))
+            ...     return x + y * z
+
+        You can call that function normally
+
+            >>> r = sample_fn(1, 2, z=3)
+            1 2 3
+            >>> r
+            7
+
+        Every call also prints to stderr
+
+            >>> print(sys.stderr.getvalue())
+            <BLANKLINE>
+              sample_fn (<doctest test_profilehooks.doctest_timecall[0]>:1):
+                0.000 seconds
+            <BLANKLINE>
+            <BLANKLINE>
+
+        """
 
 
 def doctest_timecall_to_log_immediate():
