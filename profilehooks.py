@@ -95,6 +95,7 @@ __version__ = '1.11.2.dev0'
 __date__ = "2020-01-30"
 
 import atexit
+import functools
 import inspect
 import logging
 import os
@@ -226,12 +227,9 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
 
+    @functools.wraps(fn)
     def new_fn(*args, **kw):
         return fp(*args, **kw)
-    new_fn.__doc__ = fn.__doc__
-    new_fn.__name__ = fn.__name__
-    new_fn.__dict__ = fn.__dict__
-    new_fn.__module__ = fn.__module__
     return new_fn
 
 
@@ -258,12 +256,9 @@ def coverage(fn):
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
 
+    @functools.wraps(fn)
     def new_fn(*args, **kw):
         return fp(*args, **kw)
-    new_fn.__doc__ = fn.__doc__
-    new_fn.__name__ = fn.__name__
-    new_fn.__dict__ = fn.__dict__
-    new_fn.__module__ = fn.__module__
     return new_fn
 
 
@@ -280,12 +275,9 @@ def coverage_with_hotshot(fn):
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
 
+    @functools.wraps(fn)
     def new_fn(*args, **kw):
         return fp(*args, **kw)
-    new_fn.__doc__ = fn.__doc__
-    new_fn.__name__ = fn.__name__
-    new_fn.__dict__ = fn.__dict__
-    new_fn.__module__ = fn.__module__
     return new_fn
 
 
@@ -743,12 +735,9 @@ def timecall(
     # We cannot return fp or fp.__call__ directly as that would break method
     # definitions, instead we need to return a plain function.
 
+    @functools.wraps(fn)
     def new_fn(*args, **kw):
         return fp(*args, **kw)
-    new_fn.__doc__ = fn.__doc__
-    new_fn.__name__ = fn.__name__
-    new_fn.__dict__ = fn.__dict__
-    new_fn.__module__ = fn.__module__
     return new_fn
 
 
