@@ -10,10 +10,10 @@ Changelog
 1.11.2 (2020-03-03)
 -------------------
 
-- Fix breakage with `@functools.lru_cache()`:
+- Fix breakage with ``@functools.lru_cache()``:
   https://github.com/mgedmin/profilehooks/issues/25.
 
-- Use `@functools.wraps()` so decorated functions now correctly set the
+- Use ``@functools.wraps()`` so decorated functions now correctly set the
   ``__wrapped__`` attribute.
 
 
