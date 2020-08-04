@@ -277,6 +277,32 @@ def doctest_profile_with_args():
     """
 
 
+def doctest_profile_with_stdout_redirect():
+    """Test for profile.
+
+        >>> from tempfile import TemporaryFile
+        >>> fp = TemporaryFile(mode="w+")
+
+
+        >>> @profilehooks.profile(stdout=fp)
+        ... def sample_fn(x, y, z):
+        ...     return x + y * z
+
+
+        >>> sample_fn(3, 2, 1)
+        5
+        >>> run_exitfuncs()
+        >>> fp.flush()
+        >>> fp.seek(0)
+        0
+        >>> print(fp.read())
+        <BLANKLINE>
+        *** PROFILER RESULTS ***
+        sample_fn (<doctest test_profilehooks.doctest_profile_with_stdout_redirect[2]>:1)
+        ...
+    """
+
+
 def doctest_profile_with_bad_args():
     """Test for profile.
 

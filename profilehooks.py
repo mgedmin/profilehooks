@@ -95,8 +95,10 @@ __version__ = '1.11.3.dev0'
 __date__ = "2020-03-03"
 
 import atexit
+from contextlib import redirect_stdout
 import functools
 import inspect
+import io
 import logging
 import os
 import re
@@ -170,8 +172,13 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
 
     If `skip` is > 0, first `skip` calls to `fn` will not be profiled.
 
+    If `stdout` is not file-like and truthy, output will be printed to
+    sys.stdout. If it is a file-like object, output will be redirected
+    to it instead. `stdout` must be writable in text mode (as opposed
+    to binary) if it is file-like.
+
     If `immediate` is False, profiling results will be printed to
-    sys.stdout on program termination.  Otherwise results will be printed
+    self.stdout on program termination.  Otherwise results will be printed
     after each call.  (If you don't want this, set stdout=False and specify a
     `filename` to store profile data.)
 
@@ -322,6 +329,7 @@ class FuncProfile(object):
         self.filename = filename
         self._immediate = immediate
         self.stdout = stdout
+        self._stdout_is_fp = self.stdout and isinstance(self.stdout, io.IOBase)
         self.dirs = dirs
         self.sort = sort or ('cumulative', 'time', 'calls')
         if isinstance(self.sort, str):
@@ -381,17 +389,24 @@ class FuncProfile(object):
 
     def reset_stats(self):
         """Reset accumulated profiler statistics."""
+        # send stats printing to specified stdout if it's file-like
+        stream = self.stdout if self._stdout_is_fp else sys.stdout
+
         # Note: not using self.Profile, since pstats.Stats() fails then
-        self.stats = pstats.Stats(Profile())
+        self.stats = pstats.Stats(Profile(), stream=stream)
         self.ncalls = 0
         self.skipped = 0
 
     def atexit(self):
-        """Stop profiling and print profile information to sys.stdout.
+        """Stop profiling and print profile information to sys.stdout or self.stdout.
 
         This function is registered as an atexit hook.
         """
-        self.print_stats()
+        if self._stdout_is_fp:
+            with redirect_stdout(self.stdout):
+                self.print_stats()
+        else:
+            self.print_stats()
 
 
 AVAILABLE_PROFILERS['profile'] = FuncProfile
