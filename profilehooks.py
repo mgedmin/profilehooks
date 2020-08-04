@@ -95,7 +95,7 @@ __version__ = '1.11.3.dev0'
 __date__ = "2020-03-03"
 
 import atexit
-from contextlib import redirect_stdout
+
 import functools
 import inspect
 import io
@@ -135,6 +135,23 @@ try:
 except ImportError:
     cProfile = None
 
+# for output redirection
+try:
+    # >= Py 3.4
+    from contextlib import redirect_stdout
+
+except ImportError:
+    # < Py3.4
+    from contextlib import contextmanager
+
+    @contextmanager
+    def redirect_stdout(fp):
+        og_stdout = sys.stdout
+        try:
+            sys.stdout = fp
+            yield None
+        finally:
+            sys.stdout = og_stdout
 
 # registry of available profilers
 AVAILABLE_PROFILERS = {}
@@ -162,6 +179,13 @@ def _identify(fn):
     filename = fn.__code__.co_filename
     lineno = fn.__code__.co_firstlineno
     return (funcname, filename, lineno)
+
+
+def _is_file_like(o):
+    if sys.version_info[0] >= 3:
+        return isinstance(o, io.IOBase)
+    else:
+        return hasattr(o, 'write')
 
 
 def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
@@ -329,7 +353,7 @@ class FuncProfile(object):
         self.filename = filename
         self._immediate = immediate
         self.stdout = stdout
-        self._stdout_is_fp = self.stdout and isinstance(self.stdout, io.IOBase)
+        self._stdout_is_fp = self.stdout and _is_file_like(self.stdout)
         self.dirs = dirs
         self.sort = sort or ('cumulative', 'time', 'calls')
         if isinstance(self.sort, str):

@@ -293,8 +293,7 @@ def doctest_profile_with_stdout_redirect():
         5
         >>> run_exitfuncs()
         >>> fp.flush()
-        >>> fp.seek(0)
-        0
+        >>> _ = fp.seek(0)
         >>> print(fp.read())
         <BLANKLINE>
         *** PROFILER RESULTS ***
