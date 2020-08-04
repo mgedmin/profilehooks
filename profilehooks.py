@@ -98,7 +98,6 @@ import atexit
 
 import functools
 import inspect
-import io
 import logging
 import os
 import re
@@ -182,10 +181,7 @@ def _identify(fn):
 
 
 def _is_file_like(o):
-    if sys.version_info[0] >= 3:
-        return isinstance(o, io.IOBase)
-    else:
-        return hasattr(o, 'write')
+    return hasattr(o, 'write')
 
 
 def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
