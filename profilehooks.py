@@ -134,24 +134,6 @@ try:
 except ImportError:
     cProfile = None
 
-# for output redirection
-try:
-    # >= Py 3.4
-    from contextlib import redirect_stdout
-
-except ImportError:
-    # < Py3.4
-    from contextlib import contextmanager
-
-    @contextmanager
-    def redirect_stdout(fp):
-        og_stdout = sys.stdout
-        try:
-            sys.stdout = fp
-            yield None
-        finally:
-            sys.stdout = og_stdout
-
 # registry of available profilers
 AVAILABLE_PROFILERS = {}
 
@@ -193,9 +175,9 @@ def profile(fn=None, skip=0, filename=None, immediate=False, dirs=False,
     If `skip` is > 0, first `skip` calls to `fn` will not be profiled.
 
     If `stdout` is not file-like and truthy, output will be printed to
-    sys.stdout. If it is a file-like object, output will be redirected
-    to it instead. `stdout` must be writable in text mode (as opposed
-    to binary) if it is file-like.
+    sys.stdout. If it is a file-like object, output will be printed to it
+    instead. `stdout` must be writable in text mode (as opposed to binary)
+    if it is file-like.
 
     If `immediate` is False, profiling results will be printed to
     self.stdout on program termination.  Otherwise results will be printed
@@ -393,15 +375,19 @@ class FuncProfile(object):
             stats.dump_stats(self.filename)
         if self.stdout:
             funcname, filename, lineno = _identify(self.fn)
-            print("")
-            print("*** PROFILER RESULTS ***")
-            print("%s (%s:%s)" % (funcname, filename, lineno))
+            print_f = print
+            if self._stdout_is_fp:
+                print_f = functools.partial(print, file=self.stdout)
+
+            print_f("")
+            print_f("*** PROFILER RESULTS ***")
+            print_f("%s (%s:%s)" % (funcname, filename, lineno))
             if self.skipped:
                 skipped = " (%d calls not profiled)" % self.skipped
             else:
                 skipped = ""
-            print("function called %d times%s" % (self.ncalls, skipped))
-            print("")
+            print_f("function called %d times%s" % (self.ncalls, skipped))
+            print_f("")
             if not self.dirs:
                 stats.strip_dirs()
             stats.sort_stats(*self.sort)
@@ -422,11 +408,7 @@ class FuncProfile(object):
 
         This function is registered as an atexit hook.
         """
-        if self._stdout_is_fp:
-            with redirect_stdout(self.stdout):
-                self.print_stats()
-        else:
-            self.print_stats()
+        self.print_stats()
 
 
 AVAILABLE_PROFILERS['profile'] = FuncProfile
