@@ -4,7 +4,9 @@ Changelog
 1.11.3 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Added the ability to pass a text-mode file descriptor to the `stdout` kwarg
+  of the `profile` decorator / `FuncProfiler` constructor for capturing
+  output.
 
 
 1.11.2 (2020-03-03)
