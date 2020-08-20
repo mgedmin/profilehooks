@@ -1,12 +1,12 @@
 Changelog
 =========
 
-1.11.3 (unreleased)
+1.12.0 (unreleased)
 -------------------
 
-- Added the ability to pass a text-mode file descriptor to the `stdout` kwarg
-  of the `profile` decorator / `FuncProfiler` constructor for capturing
-  output.
+- Added the ability to pass a text-mode file object to the ``stdout`` kwarg
+  of the ``@profile()`` decorator and ``FuncProfiler()`` constructor for
+  capturing output: https://github.com/mgedmin/profilehooks/pull/26.
 
 
 1.11.2 (2020-03-03)
