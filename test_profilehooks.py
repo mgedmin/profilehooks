@@ -299,6 +299,9 @@ def doctest_profile_with_stdout_redirect():
         *** PROFILER RESULTS ***
         sample_fn (<doctest test_profilehooks.doctest_profile_with_stdout_redirect[2]>:1)
         ...
+
+        >>> fp.close()
+
     """
 
 

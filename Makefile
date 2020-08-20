@@ -1,4 +1,4 @@
-PYTHON = python
+PYTHON = python3
 
 FILE_WITH_METADATA = profilehooks.py
 FILE_WITH_VERSION = profilehooks.py
@@ -14,7 +14,7 @@ flake8:
 
 .PHONY: test check
 test check:
-	$(PYTHON) test_profilehooks.py
+	PYTHONTRACEMALLOC=10 $(PYTHON) test_profilehooks.py
 
 .PHONY: coverage
 coverage:

@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.12.0 (unreleased)
+1.12.0 (2020-08-20)
 -------------------
 
 - Added the ability to pass a text-mode file object to the ``stdout`` kwarg

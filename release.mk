@@ -1,4 +1,4 @@
-# release.mk version 1.4 (2019-04-23)
+# release.mk version 1.5 (2020-05-03)
 #
 # Helpful Makefile rules for releasing Python packages.
 # https://github.com/mgedmin/python-project-skel
@@ -11,7 +11,7 @@ CHANGELOG_FORMAT ?= $(changelog_ver) ($(changelog_date))
 DISTCHECK_DIFF_OPTS ?= $(DISTCHECK_DIFF_DEFAULT_OPTS)
 
 # These should be fine
-PYTHON ?= python
+PYTHON ?= python3
 PYPI_PUBLISH ?= rm -rf dist && $(PYTHON) setup.py -q sdist bdist_wheel && twine check dist/* && twine upload dist/*
 LATEST_RELEASE_MK_URL = https://raw.githubusercontent.com/mgedmin/python-project-skel/master/release.mk
 DISTCHECK_DIFF_DEFAULT_OPTS = -x PKG-INFO -x setup.cfg -x '*.egg-info' -I'^\#'
@@ -50,7 +50,7 @@ endif
 
 .PHONY: distcheck-sdist
 distcheck-sdist:
-	make dist
+	$(MAKE) dist
 	pkg_and_version=`$(PYTHON) setup.py --name`-`$(PYTHON) setup.py --version` && \
 	  rm -rf tmp && \
 	  mkdir tmp && \
@@ -102,7 +102,7 @@ check-changelog:
 
 .PHONY: releasechecklist
 releasechecklist: check-latest-rules check-latest-version check-version-number check-long-description check-changelog
-	make distcheck
+	$(MAKE) distcheck
 
 .PHONY: release
 release: releasechecklist do-release
