@@ -14,16 +14,11 @@ jobs:
       install: pip install flake8
       script: flake8 *.py
       after_success:
-    - name: coverage
-      python: 2.7
-      script:
-        - coverage run test_profilehooks.py
-        - coverage report -m --fail-under=100
 install:
   - pip install coverage coverage-python-version coveralls
 script:
   - coverage run test_profilehooks.py
-  - coverage report -m
+  - coverage report -m --fail-under=100
 after_success:
   - coveralls
 notifications:
