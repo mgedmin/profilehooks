@@ -111,7 +111,7 @@ import pstats
 import timeit
 
 # For hotshot profiling (inaccurate!)
-try:
+try:  # pragma: PY2
     import hotshot
     import hotshot.stats
 except ImportError:
@@ -124,7 +124,7 @@ import token
 import tokenize
 
 # For hotshot coverage (inaccurate!; uses undocumented APIs; might break)
-if hotshot is not None:
+if hotshot is not None:  # pragma: PY2
     import _hotshot
     import hotshot.log
 
@@ -144,14 +144,20 @@ __all__ = ['coverage', 'coverage_with_hotshot', 'profile', 'timecall']
 tokenize_open = getattr(tokenize, 'open', open)
 
 
-def _unwrap(fn):
+try:
+    from inspect import unwrap as _unwrap
+except ImportError:  # pragma: PY2
     # inspect.unwrap() doesn't exist on Python 2
-    if not hasattr(fn, '__wrapped__'):
-        return fn
-    else:
-        # intentionally using recursion here instead of a while loop to
-        # make cycles fail with a recursion error instead of looping forever.
-        return _unwrap(fn.__wrapped__)
+    def _unwrap(fn):
+        if not hasattr(fn, '__wrapped__'):
+            return fn
+        else:  # pragma: nocover
+            # functools.wraps() doesn't set __wrapped__ on Python 2 either,
+            # so this branch will only get reached if somebody
+            # manually sets __wrapped__, hence the pragma: nocover.
+            # NB: intentionally using recursion here instead of a while loop to
+            # make cycles fail with a recursion error instead of looping forever.
+            return _unwrap(fn.__wrapped__)
 
 
 def _identify(fn):
@@ -289,7 +295,7 @@ def coverage(fn):
     return new_fn
 
 
-def coverage_with_hotshot(fn):
+def coverage_with_hotshot(fn):  # pragma: PY2
     """Mark `fn` for line coverage analysis.
 
     Uses the 'hotshot' module for fast coverage analysis.
@@ -424,7 +430,7 @@ if cProfile is not None:
     AVAILABLE_PROFILERS['cProfile'] = CProfileFuncProfile
 
 
-if hotshot is not None:
+if hotshot is not None:  # pragma: PY2
 
     class HotShotFuncProfile(FuncProfile):
         """Profiler for a function (uses hotshot)."""
@@ -646,7 +652,10 @@ class FuncSource:
 
     def find_source_lines(self):
         """Mark all executable source lines in fn as executed 0 times."""
-        if self.filename is None:
+        if self.filename is None:  # pragma: nocover
+            # I don't know how to make inspect.getsourcefile() return None in
+            # our test suite, but I've looked at its source and I know that it
+            # can do so.
             return
         strs = self._find_docstrings(self.filename)
         lines = {

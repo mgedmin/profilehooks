@@ -18,8 +18,7 @@ test check:
 
 .PHONY: coverage
 coverage:
-	coverage run --source=profilehooks test_profilehooks.py
-	coverage report -m --fail-under=100
+	tox -e coverage,coverage3
 
 .PHONY: test-all-pythons
 test-all-pythons:

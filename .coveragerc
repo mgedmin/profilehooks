@@ -1,4 +1,7 @@
 [run]
+source = profilehooks
+plugins =
+    coverage_python_version
 
 [report]
 exclude_lines =
