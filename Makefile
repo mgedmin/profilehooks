@@ -10,19 +10,15 @@ default:
 
 .PHONY: flake8
 flake8:
-	flake8 *.py
+	tox -e flake8
 
 .PHONY: test check
 test check:
-	PYTHONTRACEMALLOC=10 $(PYTHON) test_profilehooks.py
+	tox -p auto
 
 .PHONY: coverage
 coverage:
 	tox -e coverage,coverage3
-
-.PHONY: test-all-pythons
-test-all-pythons:
-	tox -p auto
 
 .PHONY: preview-pypi-description
 preview-pypi-description:
