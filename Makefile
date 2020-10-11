@@ -1,35 +1,25 @@
-PYTHON = python3
-
-FILE_WITH_METADATA = profilehooks.py
-FILE_WITH_VERSION = profilehooks.py
-FILE_WITH_CHANGELOG = CHANGES.rst
-
-.PHONY: default
-default:
+.PHONY: all
+all:
 	@echo "Nothing to build here"
 
-.PHONY: flake8
-flake8:
-	tox -e flake8
-
-.PHONY: test check
-test check:
+.PHONY: test
+test:                           ##: run tests
 	tox -p auto
 
 .PHONY: coverage
-coverage:
+coverage:                       ##: measure test coverage
 	tox -e coverage,coverage3
 
-.PHONY: preview-pypi-description
-preview-pypi-description:
-	# pip install restview, if missing
-	restview --long-description
+.PHONY: flake8
+flake8:                         ##: check for style problems
+	tox -e flake8
 
 
 .PHONY: releasechecklist
 releasechecklist: check-date  # also release.mk will add other checks
 
-DISTCHECK_DIFF_OPTS = $(DISTCHECK_DIFF_DEFAULT_OPTS) -x .github
+FILE_WITH_METADATA = profilehooks.py
+FILE_WITH_VERSION = profilehooks.py
 include release.mk
 
 .PHONY: check-date
@@ -40,5 +30,5 @@ check-date:
 	        echo "Please run make update-date"; exit 1; }
 
 .PHONY: update-date
-update-date:
+update-date:                    ##: set release date in source code to today
 	sed -i -e 's/^__date__ = ".*"/__date__ = "'`date +%Y-%m-%d`'"/' $(FILE_WITH_METADATA)
