@@ -1,4 +1,5 @@
 language: python
+cache: pip
 python:
   - 2.7
   - 3.6
@@ -21,5 +22,13 @@ script:
   - coverage report -m --fail-under=$(if [[ $TRAVIS_PYTHON_VERSION == pypy ]]; then printf 77; else printf 100; fi)
 after_success:
   - coveralls
+
 notifications:
-  email: false
+  irc:
+    channels:
+      - "chat.freenode.net##mgedmin"
+    on_success: change
+    on_failure: always
+    template:
+      # ping my nick so I get a pushbullet notification on my phone
+      - "mgedmin: %{repository_name} (%{branch}) build %{result}: %{build_url}"
