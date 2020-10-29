@@ -4,6 +4,8 @@ Changelog
 1.12.1 (unreleased)
 -------------------
 
+- Add support for Python 3.9.
+
 - Drop support for Python 3.5.
 
 
