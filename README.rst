@@ -1,8 +1,8 @@
 profilehooks
 ============
 
-.. image:: https://travis-ci.com/mgedmin/profilehooks.svg?branch=master
-   :target: https://travis-ci.com/mgedmin/profilehooks
+.. image:: https://github.com/mgedmin/profilehooks/workflows/build/badge.svg?branch=master
+    :target: https://github.com/mgedmin/profilehooks/actions
 
 .. image:: https://ci.appveyor.com/api/projects/status/github/mgedmin/profilehooks?branch=master&svg=true
    :target: https://ci.appveyor.com/project/mgedmin/profilehooks
