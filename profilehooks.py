@@ -88,27 +88,21 @@ Released under the MIT licence since December 2006:
 """
 from __future__ import print_function
 
-__author__ = "Marius Gedminas <marius@gedmin.as>"
-__copyright__ = "Copyright 2004-2020 Marius Gedminas and contributors"
-__license__ = "MIT"
-__version__ = '1.12.1.dev0'
-__date__ = "2020-08-20"
-
 import atexit
-
+import dis
 import functools
 import inspect
 import logging
 import os
+import pstats
 import re
 import sys
-
-# For profiling
-from profile import Profile
-import pstats
-
-# For timecall
 import timeit
+import token
+import tokenize
+import trace
+from profile import Profile
+
 
 # For hotshot profiling (inaccurate!)
 try:  # pragma: PY2
@@ -117,11 +111,6 @@ try:  # pragma: PY2
 except ImportError:
     hotshot = None
 
-# For trace.py coverage
-import trace
-import dis
-import token
-import tokenize
 
 # For hotshot coverage (inaccurate!; uses undocumented APIs; might break)
 if hotshot is not None:  # pragma: PY2
@@ -133,6 +122,14 @@ try:
     import cProfile
 except ImportError:
     cProfile = None
+
+
+__author__ = "Marius Gedminas <marius@gedmin.as>"
+__copyright__ = "Copyright 2004-2020 Marius Gedminas and contributors"
+__license__ = "MIT"
+__version__ = '1.12.1.dev0'
+__date__ = "2020-08-20"
+
 
 # registry of available profilers
 AVAILABLE_PROFILERS = {}

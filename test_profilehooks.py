@@ -18,6 +18,7 @@ import textwrap
 import timeit
 import unittest
 
+
 try:
     from cStringIO import StringIO
 except ImportError:
