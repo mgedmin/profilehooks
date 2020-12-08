@@ -74,7 +74,7 @@ jobs:
         toxenv:
           - flake8
           - isort
-          - check-manifets
+          - check-manifest
           - check-python-versions
 
     steps:
