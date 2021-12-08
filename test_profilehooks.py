@@ -631,7 +631,7 @@ if pytest is not None:
     class Bag(object):
         pass
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def setUpForPyTest(capsys):
         # NB: we need capsys otherwise our custom sys.stderr wrapper that we set up
         # in the setUp() call here will be replaced by pytest's own wrapper.
