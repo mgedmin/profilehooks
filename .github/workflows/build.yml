@@ -26,7 +26,7 @@ jobs:
           - "3.9"
           - "3.10"
           - "pypy2"
-          - "pypy3"
+          - "pypy-3.7"
 
     steps:
       - name: Git clone
