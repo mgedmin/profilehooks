@@ -26,6 +26,7 @@ setup(
     url='https://mg.pov.lt/profilehooks/',
     description='Decorators for profiling/timing/tracing individual functions',
     long_description=read('README.rst') + '\n\n' + read('CHANGES.rst'),
+    long_description_content_type='text/x-rst',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
