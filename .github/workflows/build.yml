@@ -50,11 +50,12 @@ jobs:
         run: |
           python -m pip install -U pip
           python -m pip install -U setuptools wheel
+          python -m pip install -U pytest
           python -m pip install -U coverage coverage-python-version coveralls
           python -m pip install -e .
 
       - name: Run tests
-        run: coverage run test_profilehooks.py
+        run: coverage run -m pytest
 
       - name: Check test coverage
         run: coverage report -m --fail-under=${{ matrix.python-version == 'pypy2' && 77 || 100 }}
