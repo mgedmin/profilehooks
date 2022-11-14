@@ -50,7 +50,7 @@ jobs:
         run: |
           python -m pip install -U pip
           python -m pip install -U setuptools wheel
-          python -m pip install -U coverage coverage-python-version coveralls
+          python -m pip install -U coverage coveralls
           python -m pip install -e .
 
       - name: Run tests
