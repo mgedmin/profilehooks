@@ -26,19 +26,20 @@ jobs:
           - "3.9"
           - "3.10"
           - "3.11"
-          - "pypy-3.7"
+          - "pypy2.7"
+          - "pypy3.7"
 
     steps:
       - name: Git clone
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "${{ matrix.python-version }}"
 
       - name: Pip cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
@@ -57,11 +58,11 @@ jobs:
         run: coverage run test_profilehooks.py
 
       - name: Check test coverage
-        run: coverage report -m --fail-under=${{ matrix.python-version == 'pypy2' && 77 || 100 }}
+        run: coverage report -m --fail-under=${{ matrix.python-version == 'pypy2.7' && 77 || 100 }}
 
       - name: Report to coveralls
         run: coveralls
-        if: "matrix.python-version != '2.7' && matrix.python-version != 'pypy2'"
+        if: "matrix.python-version != '2.7' && matrix.python-version != 'pypy2.7'"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_SERVICE_NAME: github
@@ -80,15 +81,15 @@ jobs:
 
     steps:
       - name: Git clone
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python ${{ env.default_python || '3.9' }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "${{ env.default_python || '3.9' }}"
 
       - name: Pip cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ matrix.toxenv }}-${{ hashFiles('tox.ini') }}
