@@ -500,7 +500,7 @@ def doctest_timecall_on_lru_cache():
 
         >>> print(sys.stderr.getvalue())
         <BLANKLINE>
-          sample_fn (<doctest test_profilehooks.doctest_timecall[0]>:1):
+          sample_fn (<doctest test_profilehooks.doctest_timecall_on_lru_cache[0]>:1):
             0.000 seconds
         <BLANKLINE>
         <BLANKLINE>
