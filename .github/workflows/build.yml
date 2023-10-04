@@ -25,11 +25,12 @@ jobs:
           - "3.9"
           - "3.10"
           - "3.11"
+          - "3.12"
           - "pypy3.7"
 
     steps:
       - name: Git clone
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -49,21 +50,22 @@ jobs:
         run: |
           python -m pip install -U pip
           python -m pip install -U setuptools wheel
-          python -m pip install -U coverage coveralls
+          python -m pip install -U coverage
           python -m pip install -e .
 
       - name: Run tests
-        run: coverage run test_profilehooks.py
+        run: |
+          coverage run test_profilehooks.py
 
       - name: Check test coverage
-        run: coverage report -m --fail-under=100
+        run: |
+          coverage report -m --fail-under=100
+          coverage xml
 
       - name: Report to coveralls
-        run: coveralls
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_SERVICE_NAME: github
+        uses: coverallsapp/github-action@v2
+        with:
+          file: coverage.xml
 
   lint:
     name: ${{ matrix.toxenv }}
@@ -79,7 +81,7 @@ jobs:
 
     steps:
       - name: Git clone
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ env.default_python || '3.9' }}
         uses: actions/setup-python@v4
