@@ -8,6 +8,8 @@ Changelog
 
 - Drop support for Python 2.7, 3.5 and 3.6.
 
+- Drop support for ``hotshot`` (which was only available for Python 2.7).
+
 
 1.12.0 (2020-08-20)
 -------------------

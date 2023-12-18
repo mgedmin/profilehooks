@@ -149,20 +149,6 @@ class TestCoverage(TestCase):
             """.format(filename=filename, lineno=linenumber)))
 
 
-if profilehooks.hotshot is not None:
-
-    class TestCoverageWithHotShot(TestCoverage):
-        decorator = staticmethod(profilehooks.coverage_with_hotshot)
-
-        def tearDown(self):
-            super(TestCoverageWithHotShot, self).tearDown()
-            for name in 'sample_fn', 'sample_fn_2':
-                try:
-                    os.unlink('%s.%d.cprof' % (name, os.getpid()))
-                except OSError:
-                    pass
-
-
 def doctest_coverage_when_source_is_not_available(self):
     """Test for coverage.
 
@@ -334,54 +320,6 @@ def doctest_profile_recursive_function():
         function called 4 times
         ...
         6
-
-    """
-
-
-@skipIf(profilehooks.hotshot is None, 'hotshot is not available')
-def doctest_profile_with_hotshot():
-    """Test for profile
-
-        >>> @profilehooks.profile(immediate=True, profiler='hotshot', skip=2)
-        ... def fac(n):
-        ...     if n < 1: return 1
-        ...     return n * fac(n-1)
-
-        >>> fac(1)
-        1
-
-        >>> fac(3)
-        <BLANKLINE>
-        *** PROFILER RESULTS ***
-        fac (<doctest test_profilehooks.doctest_profile_with_hotshot[0]>:1)
-        function called 6 times (2 calls not profiled)
-        ...
-        6
-
-    Hotshot leaves temporary files behind
-
-        >>> os.unlink('fac.%d.prof' % os.getpid())
-
-    """
-
-
-@skipIf(profilehooks.hotshot is None, 'hotshot is not available')
-def doctest_profile_with_hotshot_no_calls():
-    """Test for profile
-
-        >>> @profilehooks.profile(profiler='hotshot', filename='fac.prof')
-        ... def fac(n):
-        ...     if n < 1: return 1
-        ...     return n * fac(n-1)
-
-        >>> run_exitfuncs()
-        <BLANKLINE>
-        *** PROFILER RESULTS ***
-        fac (<doctest test_profilehooks.doctest_profile_with_hotshot_no_calls[0]>:1)
-        function called 0 times
-        ...
-
-        >>> os.unlink('fac.prof')
 
     """
 
