@@ -8,7 +8,7 @@ test:                           ##: run tests
 
 .PHONY: coverage
 coverage:                       ##: measure test coverage
-	tox -e coverage,coverage3
+	tox -e coverage
 
 .PHONY: flake8
 flake8:                         ##: check for style problems

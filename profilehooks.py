@@ -96,8 +96,8 @@ except ImportError:
 __author__ = "Marius Gedminas <marius@gedmin.as>"
 __copyright__ = "Copyright 2004-2020 Marius Gedminas and contributors"
 __license__ = "MIT"
-__version__ = '1.12.1.dev0'
-__date__ = "2020-08-20"
+__version__ = '1.13.0.dev0'
+__date__ = "2023-12-18"
 
 
 # registry of available profilers
@@ -106,28 +106,8 @@ AVAILABLE_PROFILERS = {}
 __all__ = ['coverage', 'profile', 'timecall']
 
 
-# Use tokenize.open() on Python >= 3.2, fall back to open() on Python 2
-tokenize_open = getattr(tokenize, 'open', open)
-
-
-try:
-    from inspect import unwrap as _unwrap
-except ImportError:  # pragma: PY2
-    # inspect.unwrap() doesn't exist on Python 2
-    def _unwrap(fn):
-        if not hasattr(fn, '__wrapped__'):
-            return fn
-        else:  # pragma: nocover
-            # functools.wraps() doesn't set __wrapped__ on Python 2 either,
-            # so this branch will only get reached if somebody
-            # manually sets __wrapped__, hence the pragma: nocover.
-            # NB: intentionally using recursion here instead of a while loop to
-            # make cycles fail with a recursion error instead of looping forever.
-            return _unwrap(fn.__wrapped__)
-
-
 def _identify(fn):
-    fn = _unwrap(fn)
+    fn = inspect.unwrap(fn)
     funcname = fn.__name__
     filename = fn.__code__.co_filename
     lineno = fn.__code__.co_firstlineno
@@ -467,7 +447,7 @@ class FuncSource:
         strs = self._find_docstrings(self.filename)
         lines = {
             ln
-            for off, ln in dis.findlinestarts(_unwrap(self.fn).__code__)
+            for off, ln in dis.findlinestarts(inspect.unwrap(self.fn).__code__)
             # skipping firstlineno because Python 3.11 adds a 'RESUME' opcode
             # attributed to the `def` line, but then trace.py never sees it
             # getting executed
@@ -486,7 +466,7 @@ class FuncSource:
         # Python 3.2 and removed in 3.6.
         strs = set()
         prev = token.INDENT  # so module docstring is detected as docstring
-        with tokenize_open(filename) as f:
+        with tokenize.open(filename) as f:
             tokens = tokenize.generate_tokens(f.readline)
             for ttype, tstr, start, end, line in tokens:
                 if ttype == token.STRING and prev == token.INDENT:

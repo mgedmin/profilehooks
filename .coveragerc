@@ -4,6 +4,5 @@ source = profilehooks
 [report]
 exclude_lines =
     pragma: nocover
-    pragma: PY2
     except ImportError:
     if __name__ == '__main__':
