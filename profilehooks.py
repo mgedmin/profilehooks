@@ -451,7 +451,7 @@ class FuncSource:
             # skipping firstlineno because Python 3.11 adds a 'RESUME' opcode
             # attributed to the `def` line, but then trace.py never sees it
             # getting executed
-            if ln not in strs and ln != self.firstlineno
+            if ln is not None and ln not in strs and ln != self.firstlineno
         }
         for lineno in lines:
             self.sourcelines.setdefault(lineno, 0)
