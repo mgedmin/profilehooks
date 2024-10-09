@@ -4,7 +4,7 @@ Changelog
 1.13.0 (unreleased)
 -------------------
 
-- Add support for Python 3.9, 3.10, 3.11, and 3.12.
+- Add support for Python 3.9, 3.10, 3.11, 3.12, and 3.13.
 
 - Drop support for Python 2.7, 3.5 and 3.6.
 
