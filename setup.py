@@ -48,6 +48,5 @@ setup(
     license='MIT',
 
     py_modules=['profilehooks'],
-    test_suite='test_profilehooks',
     zip_safe=False,
 )
