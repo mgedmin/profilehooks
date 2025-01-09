@@ -1,7 +1,7 @@
 profilehooks
 ============
 
-.. image:: https://github.com/mgedmin/profilehooks/workflows/build/badge.svg?branch=master
+.. image:: https://github.com/mgedmin/profilehooks/actions/workflows/build.yml/badge.svg?branch=master
     :target: https://github.com/mgedmin/profilehooks/actions
 
 .. image:: https://ci.appveyor.com/api/projects/status/github/mgedmin/profilehooks?branch=master&svg=true
