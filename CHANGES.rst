@@ -4,7 +4,7 @@ Changelog
 1.13.1 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Drop support for Python 3.7.
 
 
 1.13.0 (2024-10-09)
