@@ -4,9 +4,6 @@ profilehooks
 .. image:: https://github.com/mgedmin/profilehooks/actions/workflows/build.yml/badge.svg?branch=master
     :target: https://github.com/mgedmin/profilehooks/actions
 
-.. image:: https://ci.appveyor.com/api/projects/status/github/mgedmin/profilehooks?branch=master&svg=true
-   :target: https://ci.appveyor.com/project/mgedmin/profilehooks
-
 .. image:: https://coveralls.io/repos/mgedmin/profilehooks/badge.svg?branch=master
    :target: https://coveralls.io/r/mgedmin/profilehooks
 
