@@ -55,13 +55,14 @@ jobs:
 
       - name: Check test coverage
         run: |
-          coverage report -m --fail-under=100
           coverage xml
+          coverage report -m --fail-under=100
 
       - name: Report to coveralls
         uses: coverallsapp/github-action@v2
         with:
           file: coverage.xml
+        continue-on-error: true  # coveralls is unreliable
 
   lint:
     name: ${{ matrix.toxenv }}
