@@ -16,9 +16,11 @@ jobs:
   build:
     name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.optional }}
 
     strategy:
       matrix:
+        optional: [false]
         python-version:
           - "3.10"
           - "3.11"
@@ -29,6 +31,14 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+        include:
+          - python-version: pypy3.11
+            os: windows-latest
+            optional: true
+        exclude:
+          - python-version: pypy3.11
+            os: windows-latest
+            optional: false
 
     steps:
       - name: Git clone
